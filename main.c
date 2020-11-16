@@ -1,4 +1,5 @@
 #include "inputs.h"
+//#include "convex_hull.h"
 #include <time.h>
 
 
@@ -55,12 +56,15 @@ int main()
 		bov_text_draw(window, textDraw);
 		*/
 
-		// points_set_width(coordDraw, 0.003);
+		bov_points_set_width(coordDraw, 0.003);
 		bov_points_set_outline_width(coordDraw, -1.);
 		bov_points_draw(window, coordDraw, 0, nPoints);
 
 		bov_window_update(window);
 	}
+
+	//int *hull = malloc(sizeof(int)*nPoints);
+	//jarvis_march(nPoints, coord, hull);
 
 	bov_points_delete(coordDraw);
 	bov_text_delete(textDraw);
