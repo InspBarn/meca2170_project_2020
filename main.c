@@ -1,8 +1,8 @@
-#include "inputs.h"
-//#include "convex_hull.h"
+//#include "inputs.h"
+#include "convex_hull.h"
 #include <time.h>
 
-
+/*
 int main()
 {
 	// give a bit of entropy for the seed of rand()
@@ -41,7 +41,6 @@ int main()
 		// bov_line_loop_draw(window, coordDraw, 0, nPoints);
 		// bov_lines_draw(window, coordDraw, 0, nPoints);
 
-		/*
 		if (cos(bov_window_get_time(window)*5) < 0) {
 			bov_text_set_outline_color(textDraw, (GLfloat[4]) {1.0, 0.2, 0.0, 1.0});
 			i = 0;
@@ -54,7 +53,6 @@ int main()
 			}
 		}
 		bov_text_draw(window, textDraw);
-		*/
 
 		bov_points_set_width(coordDraw, 0.003);
 		bov_points_set_outline_width(coordDraw, -1.);
@@ -63,12 +61,94 @@ int main()
 		bov_window_update(window);
 	}
 
-	//int *hull = malloc(sizeof(int)*nPoints);
-	//jarvis_march(nPoints, coord, hull);
+	int *hull = malloc(sizeof(int)*nPoints);
+	jarvis_march(nPoints, coord, hull);
 
 	bov_points_delete(coordDraw);
 	bov_text_delete(textDraw);
 	free(coord);
+	bov_window_delete(window);
+
+	return EXIT_SUCCESS;
+}
+*/
+
+void square(float coord[][2])
+{
+	coord[0][0] = 0.5; coord[0][1] = 0.0;
+	coord[1][0] = 0.0; coord[1][1] = 0.5;
+	coord[2][0] = -0.5; coord[2][1] = 0.0;
+	coord[3][0] = 0.0; coord[3][1] = -0.5;
+}
+
+int main()
+{
+	// give a bit of entropy for the seed of rand()
+	// or it will always be the same sequence
+	int seed = (int) time(NULL);
+	srand(seed);
+
+	// we print the seed so you can get the distribution of points back
+	printf("seed=%d\n", seed);
+
+	const int nPoints = 500;
+	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
+#if 0 // put 1 for random polygon
+	random_polygon(coord, nPoints, 4);
+#else
+	random_points(coord, nPoints);
+	// square(coord);
+#endif
+
+	printf("Jarvis March Algorithm --- BEGIN\n");
+	int *indexHull = malloc(sizeof(int)*nPoints);
+
+	int nHull = jarvis_march(nPoints, coord, indexHull);
+	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
+	for (int i=0; i<nHull; i++) {
+		coordHull[i][0] = coord[indexHull[i]][0];
+		coordHull[i][1] = coord[indexHull[i]][1];
+	}
+	printf("Jarvis March Algorithm --- END\n");
+	printf("  -- Number of points in the hull : N = %d\n", nHull);
+
+	const GLsizei nPoints_GL = (GLsizei) nPoints;
+	GLfloat (*coord_GL)[2] = (GLfloat (*)[2]) coord;
+	GLsizei nHull_GL   = (GLsizei) nHull;
+	GLfloat (*coordHull_GL)[2] = (GLfloat (*)[2]) coordHull;
+
+
+	bov_window_t* window = bov_window_new(800, 800, "My first BOV program");
+	bov_window_set_color(window, (GLfloat[]){0.9f, 0.85f, 0.8f, 1.0f});
+
+	bov_points_t *coordDraw = bov_points_new(coord_GL, nPoints_GL, GL_STATIC_DRAW);
+	bov_points_set_color(coordDraw, (GLfloat[4]) {0.0, 0.0, 0.0, 1.0});
+	bov_points_set_outline_color(coordDraw, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+	bov_points_t *coordDrawHull = bov_points_new(coordHull_GL, nHull_GL, GL_STATIC_DRAW);
+	bov_points_set_color(coordDrawHull, (GLfloat[4]) {0.0, 0.0, 0.0, 1.0});
+	bov_points_set_outline_color(coordDrawHull, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+	while(!bov_window_should_close(window)){
+		bov_points_set_width(coordDraw, 0.003);
+		bov_points_set_outline_width(coordDraw, 0.002);
+		bov_points_set_width(coordDrawHull, 0.003);
+		bov_points_set_outline_width(coordDrawHull, 0.);
+		
+		bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+		// bov_lines_draw(window, coordDraw, 0, nPoints);
+
+		bov_points_set_width(coordDraw, 0.005);
+		bov_points_set_outline_width(coordDraw, -1.);
+		bov_points_draw(window, coordDraw, 0, nPoints);
+
+		bov_window_update(window);
+	}
+
+	bov_points_delete(coordDraw);
+	bov_points_delete(coordDrawHull);
+	free(coord); free(coord_GL);
+	free(coordHull); free(coordHull_GL);
 	bov_window_delete(window);
 
 	return EXIT_SUCCESS;
