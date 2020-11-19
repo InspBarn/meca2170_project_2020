@@ -73,14 +73,6 @@
 	}
 */
 
-void square(float coord[][2])
-{
-	coord[0][0] = 0.5; coord[0][1] = 0.0;
-	coord[1][0] = 0.0; coord[1][1] = 0.5;
-	coord[2][0] = -0.5; coord[2][1] = 0.0;
-	coord[3][0] = 0.0; coord[3][1] = -0.5;
-}
-
 int main()
 {
 	// give a bit of entropy for the seed of rand()
@@ -97,17 +89,16 @@ int main()
 	random_polygon(coord, nPoints, 4);
 #else
 	random_points(coord, nPoints);
-	// square(coord);
 #endif
 
-	// printf("Jarvis March Algorithm --- BEGIN\n");
-	printf("Graham's scan Algorithm --- BEGIN\n");
+	printf("Jarvis March Algorithm --- BEGIN\n");
+	// printf("Graham's scan Algorithm --- BEGIN\n");
 	clock_t t0 = clock();
 
 	int *indexHull = malloc(sizeof(int)*nPoints);
 
 	// int nHull = jarvis_march(nPoints, coord, indexHull);
-	int nHull = graham_scan(coord, indexHull, nPoints);
+	int nHull = graham_scan(nPoints, coord, indexHull);
 
 	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
 	for (int i=0; i<nHull; i++) {
