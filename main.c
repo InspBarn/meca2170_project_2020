@@ -91,7 +91,7 @@ int main()
 	// we print the seed so you can get the distribution of points back
 	printf("seed=%d\n", seed);
 
-	const int nPoints = 100;
+	const int nPoints = 1000;
 	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
 #if 0 // put 1 for random polygon
 	random_polygon(coord, nPoints, 4);
@@ -100,12 +100,15 @@ int main()
 	// square(coord);
 #endif
 
-	printf("Jarvis March Algorithm --- BEGIN\n");
+	// printf("Jarvis March Algorithm --- BEGIN\n");
+	printf("Graham's scan Algorithm --- BEGIN\n");
 	clock_t t0 = clock();
 
 	int *indexHull = malloc(sizeof(int)*nPoints);
 
-	int nHull = jarvis_march(nPoints, coord, indexHull);
+	// int nHull = jarvis_march(nPoints, coord, indexHull);
+	int nHull = graham_scan(coord, indexHull, nPoints);
+
 	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
 	for (int i=0; i<nHull; i++) {
 		coordHull[i][0] = coord[indexHull[i]][0];
@@ -142,7 +145,7 @@ int main()
 		bov_points_set_outline_width(coordDraw, 0.002);
 		bov_points_set_width(coordDrawHull, 0.003);
 		bov_points_set_outline_width(coordDrawHull, 0.);
-		
+
 		bov_line_loop_draw(window, coordDrawHull, 0, nHull);
 		// bov_lines_draw(window, coordDraw, 0, nPoints);
 

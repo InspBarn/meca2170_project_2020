@@ -90,3 +90,121 @@ int jarvis_march(int nPoints, float coord[][2], int* indexHull)
 	return count;
 }
 
+// Graham's scan part
+
+//input: x and y coo of 3 points
+//output: >0 if the 3 points turn left (counter-clock) in the 1-2-3 way, <0 otherwise
+// non robuste: return 0 if points are aligned
+double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3){
+	return (1.0/2.0)*(x1*(y2-y3) - x2*(y1-y3) + x3*(y1-y2));
+}
+
+int graham_scan(float (*coord)[2], int* hull, int N){
+
+	int nHull = 0;
+
+	// 1) sort the point wrt x, return (int*) sorted[N]
+	int* sorted = (int*)calloc(N, sizeof(int));
+	argsort(N,coord, 0, sorted);
+
+	//2) p1 and p2 in upper_list
+	int* upper_list = (int*)calloc(N, sizeof(int));
+
+	upper_list[0] = sorted[0];
+	upper_list[1] = sorted[1];
+	int ul_tracker = 2; // tracker of the next free position
+	double turn;
+	int flag = 0;
+
+	// for 3 to n
+	for( int i = 2; i < N; i++){
+
+		// append pi to upper_list
+		upper_list[ul_tracker] = sorted[i];
+		ul_tracker++;
+
+		if (ul_tracker > 2){
+			turn = turn_dir(coord[upper_list[ul_tracker-3]][0], coord[upper_list[ul_tracker-3]][1],
+											coord[upper_list[ul_tracker-2]][0], coord[upper_list[ul_tracker-2]][1],
+											coord[upper_list[ul_tracker-1]][0], coord[upper_list[ul_tracker-1]][1]);
+
+			flag = 1;
+		}
+
+		// while sizeof(upper_list) > 2 && 3 last points make a LEFT turn
+		while( flag &&  turn>0.0){
+
+			//delete middle point
+			upper_list[ul_tracker-2] = upper_list[ul_tracker-1];
+			upper_list[ul_tracker-1] = 0;
+			ul_tracker--;
+
+
+			flag = 0;
+			if (ul_tracker > 2){
+				turn = turn_dir(coord[upper_list[ul_tracker-3]][0], coord[upper_list[ul_tracker-3]][1],
+												coord[upper_list[ul_tracker-2]][0], coord[upper_list[ul_tracker-2]][1],
+												coord[upper_list[ul_tracker-1]][0], coord[upper_list[ul_tracker-1]][1]);
+				flag = 1;
+			}
+			if(i==N-1){
+				printf("HERE: %d et  %f \n", flag, turn);
+			}
+		}
+
+	}
+
+	int* lower_list = (int*)calloc(N, sizeof(int));
+
+	lower_list[0] = sorted[N-1];
+	lower_list[1] = sorted[N-2];
+	int ll_tracker = 2; // tracker of the next free position
+
+	for( int i = N-3; i >-1; i--){
+
+		// append pi to lower_list
+		lower_list[ll_tracker] = sorted[i];
+		ll_tracker++;
+
+		flag = 0;
+		if(ll_tracker > 2){
+			turn = turn_dir(coord[lower_list[ll_tracker-3]][0], coord[lower_list[ll_tracker-3]][1],
+											coord[lower_list[ll_tracker-2]][0], coord[lower_list[ll_tracker-2]][1],
+											coord[lower_list[ll_tracker-1]][0], coord[lower_list[ll_tracker-1]][1]);
+			flag = 1;
+		}
+
+		// while sizeof(upper_list) > 2 && 3 last points make a LEFT turn
+		while(flag && turn >0.0){
+			//delete middle point
+			lower_list[ll_tracker-2] = lower_list[ll_tracker-1];
+			lower_list[ll_tracker-1] = 0;
+			ll_tracker--;
+
+			flag = 0;
+			if(ll_tracker > 2){
+				turn = turn_dir(coord[lower_list[ll_tracker-3]][0], coord[lower_list[ll_tracker-3]][1],
+												coord[lower_list[ll_tracker-2]][0], coord[lower_list[ll_tracker-2]][1],
+												coord[lower_list[ll_tracker-1]][0], coord[lower_list[ll_tracker-1]][1]);
+				flag = 1;
+			}
+		}
+
+	}
+
+	for(int j=0; j<ul_tracker; j++){
+		hull[j] = upper_list[j];
+		nHull++;
+	}
+
+	for(int k=1; k<ll_tracker-1; k++){
+		hull[ul_tracker-1+k] = lower_list[k];
+		nHull++;
+	}
+
+	free(lower_list);
+	free(upper_list);
+
+	return nHull;
+
+}
