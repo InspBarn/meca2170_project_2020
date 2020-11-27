@@ -24,7 +24,7 @@ static int argmin(int nPoints, float coord[][2], int axis)
 	return argmin;
 }
 
-static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
+void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 {
 	argsorted_list[0] = 0;
 	int i,j; float x;
@@ -46,7 +46,7 @@ Inputs :
 		axis 0 : x-direction
 		axis 1 : y-direction
 
-Output : 
+Output :
 	area      -- Area of the triangle between those 3 points
 -------------------------------------------------
 */
@@ -124,8 +124,14 @@ Graham's Scan Algorithm
 //input: x and y coo of 3 points
 //output: >0 if the 3 points turn left (counter-clock) in the 1-2-3 way, <0 otherwise
 // non robuste: return 0 if points are aligned
-double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3){
-	return (1.0/2.0)*(x1*(y2-y3) - x2*(y1-y3) + x3*(y1-y2));
+// double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3){
+// 	return (x1*(y2-y3) - x2*(y1-y3) + x3*(y1-y2));
+// }
+double turn_dir(float x1[2], float x2[2], float x3[2]){
+	double area = (x1[0]*x2[1] - x2[0]*x1[1]) \
+			   - (x1[0]*x3[1] - x3[0]*x1[1]) \
+			   + (x2[0]*x3[1] - x3[0]*x2[1]);
+	return area;
 }
 
 
@@ -146,7 +152,7 @@ Output :
 int graham_scan(int nPoints, float coord[][2], int* hull)
 {
 	/* Initialisation */
-	int ul_tracker,ll_tracker,flag; float drct;
+	int ul_tracker,ll_tracker,flag; double drct;
 	int* upper_list = (int*)calloc(nPoints, sizeof(int));
 	int* lower_list = (int*)calloc(nPoints, sizeof(int));
 	flag = 0;
@@ -168,18 +174,15 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 		upper_list[ul_tracker] = sorted[i];
 		ul_tracker++;
 
-		/* Pass through only if there is a 
-			minimum of 3 points in the upper hull */
-		if (ul_tracker > 2){
-			drct = direction(coord[upper_list[ul_tracker-3]], \
-							 coord[upper_list[ul_tracker-2]], \
-							 coord[upper_list[ul_tracker-1]]) / 2.0;
-			flag = 1;
-		} // Condition indispensable ??
 
-		/* Step 3.2 : WHILE sizeof(upper_list) > 2 
+		drct = turn_dir(coord[upper_list[ul_tracker-3]], \
+						 coord[upper_list[ul_tracker-2]], \
+						 coord[upper_list[ul_tracker-1]]);
+		flag = 1;
+
+		/* Step 3.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
-		while( flag &&  drct>0.0){
+		while( flag &&  drct>=0){
 			/* DELETE the middle point */
 			upper_list[ul_tracker-2] = upper_list[ul_tracker-1];
 			upper_list[ul_tracker-1] = 0;
@@ -187,15 +190,13 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 
 			flag = 0;
 			if (ul_tracker > 2){
-				drct = direction(coord[upper_list[ul_tracker-3]],
+				drct = turn_dir(coord[upper_list[ul_tracker-3]],
 								 coord[upper_list[ul_tracker-2]],
-								 coord[upper_list[ul_tracker-1]]) / 2.0;
+								 coord[upper_list[ul_tracker-1]]);
 				flag = 1;
 			}
-			if(i==nPoints-1){
-				printf("HERE: %d et  %f \n", flag, drct);
-			}
 		}
+
 	}
 
 	/* Step 4 : Store the points' indexes of the upper convex hull */
@@ -215,19 +216,14 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 		lower_list[ll_tracker] = sorted[i];
 		ll_tracker++;
 
-		flag = 0;
-		/* Pass through only if there is a 
-			minimum of 3 points in the lower hull */
-		if(ll_tracker > 2){
-			drct = direction(coord[lower_list[ll_tracker-3]],
-							 coord[lower_list[ll_tracker-2]],
-							 coord[lower_list[ll_tracker-1]]) / 2.0;
-			flag = 1;
-		} // Condition indispensable ??
+		drct = turn_dir(coord[lower_list[ll_tracker-3]],
+						 coord[lower_list[ll_tracker-2]],
+						 coord[lower_list[ll_tracker-1]]);
+		flag = 1;
 
-		/* Step 6.2 : WHILE sizeof(upper_list) > 2 
+		/* Step 6.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
-		while(flag && drct >0.0){
+		while(flag && drct >=0){
 			// DELETE the middle point
 			lower_list[ll_tracker-2] = lower_list[ll_tracker-1];
 			lower_list[ll_tracker-1] = 0;
@@ -235,7 +231,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 
 			flag = 0;
 			if(ll_tracker > 2){
-				drct = direction(coord[lower_list[ll_tracker-3]],
+				drct = turn_dir(coord[lower_list[ll_tracker-3]],
 								 coord[lower_list[ll_tracker-2]],
 								 coord[lower_list[ll_tracker-1]]) / 2.0;
 				flag = 1;
@@ -254,4 +250,78 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	free(upper_list);
 
 	return ul_tracker + ll_tracker - 2;
+}
+
+// DIVIDE AND CONQUER (FOR SPARTA)
+
+
+int* concat(int* V1, int* V2){
+	int length_V1 = sizeof(V1) / sizeof(V1[0]);
+	int length_V2 = sizeof(V2) / sizeof(V2[0]);
+
+	int* concat_V = calloc((length_V1+length_V2), sizeof(int));
+	for(int i=0; i<length_V1; i++){
+		concat_V[i] = V1[i];
+	}
+	for(int j=0; j<length_V2; j++){
+		concat_V[length_V1+j] = V2[j];
+	}
+	printf("length = %d \n", length_V1 + length_V2);
+	return concat_V;
+}
+
+int min_dist(int* points, float coord[][2], int I, int J){
+	double min_dist=10000; double dist;
+	int min_point = -1;
+
+	for(int i=0; i< sizeof(points) / sizeof(points[0]); i++){
+		dist = turn_dir(coord[I], coord[J], coord[points[i]]);
+		if(dist<min_dist){
+			min_dist=dist;
+			min_point = points[i];
+		}
+	}
+	return min_point;
+}
+
+int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]){
+	int* I = calloc(size_S, sizeof(int));
+	int* J = calloc(size_S, sizeof(int));
+	int* tab = calloc(2, sizeof(int));
+	int size_I = 0; int size_J = 0; int V=0;
+	if(size_S==0){
+		tab[0] = V_i; tab[1] = V_j;
+		return tab;
+	} else {
+		V = min_dist(S, coord, V_i, V_j);
+		for(int i=0; i< size_S; i++){
+			if(turn_dir(coord[V_i], coord[V],coord[S[i]]) < 0){
+				I[size_I] = S[i];
+				size_I++;
+			} else if (turn_dir(coord[V], coord[V_j], coord[S[i]]) < 0 ){
+				J[size_J] = S[i];
+				size_J++;
+			} else{
+
+			}
+		}
+
+	}
+	int* V1 = quick_hull(I, size_I, V_i, V, coord);
+	int* V2 = quick_hull(J, size_J, V, V_j, coord);
+
+	int length_V1 = (int)(sizeof(V1) / sizeof(V1[0]));
+	int length_V2 = (int)(sizeof(V2) / sizeof(V2[0]));
+
+
+	int* concat_V = calloc((length_V1+length_V2), sizeof(int));
+	for(int i=0; i<length_V1; i++){
+		concat_V[i] = V1[i];
+	}
+	for(int j=0; j<length_V2; j++){
+		concat_V[length_V1+j] = V2[j];
+	}
+
+	printf("size: %ld, expect: %d \n", sizeof(concat_V)/sizeof(concat_V[0]),length_V1+length_V2);
+	return concat_V;
 }
