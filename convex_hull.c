@@ -1,16 +1,18 @@
 #include "convex_hull.h"
 
-static inline void insert(int N, int M, int* sorted)
-{
-	int prev, next;
-	next = N;
-	for(int a=M; a<N; a++) {
-		prev = next;
-		next = sorted[a];
-		sorted[a] = prev;
+/*
+	static inline void insert(int N, int M, int* sorted)
+	{
+		int prev, next;
+		next = N;
+		for(int a=M; a<N; a++) {
+			prev = next;
+			next = sorted[a];
+			sorted[a] = prev;
+		}
+		sorted[N] = next;
 	}
-	sorted[N] = next;
-}
+*/
 
 static int argmin(int nPoints, float coord[][2], int axis)
 {
@@ -117,6 +119,7 @@ int jarvis_march(int nPoints, float coord[][2], int* indexHull)
 	return count;
 }
 
+<<<<<<< HEAD
 /*
 Graham's Scan Algorithm
 */
@@ -134,6 +137,8 @@ double turn_dir(float x1[2], float x2[2], float x3[2]){
 	return area;
 }
 
+=======
+>>>>>>> 83b3e5fa859bff824257da889aef1d5e108d7d43
 
 /*
 Graham's Scan Algorithm
@@ -211,7 +216,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	ll_tracker = 2;
 
 	/* Step 6 : FOR nPoints-3 → 0 */
-	for(int i = nPoints-3; i >-1; i--){
+	for(int i = nPoints-3; i > -1; i--){
 		/* Step 6.1 : APPEND point 'i' to lower_list */
 		lower_list[ll_tracker] = sorted[i];
 		ll_tracker++;
@@ -252,6 +257,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	return ul_tracker + ll_tracker - 2;
 }
 
+<<<<<<< HEAD
 // DIVIDE AND CONQUER (FOR SPARTA)
 
 
@@ -324,4 +330,65 @@ int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]){
 
 	printf("size: %ld, expect: %d \n", sizeof(concat_V)/sizeof(concat_V[0]),length_V1+length_V2);
 	return concat_V;
+=======
+/*
+Chan's Algorithm
+-------------------------------------------------
+Inputs :
+	nPoints   -- Amount of points in the coord vector
+	coord     -- Coordinates of points in the grid
+		axis 0 : x-direction
+		axis 1 : y-direction
+	indexHull -- Array of integer for indexing the points in the convex hull
+
+Output :
+	count     -- Amount of points in the convex Hull
+-------------------------------------------------
+*/
+int chan_(int nPoints, float coord[][2], int* hull, int mPoints)
+{
+	int mSets,mLastPoints;
+	// mPoints = 10;
+	// mSets = nPoints /mPoints;
+	// mLastPoints = mPoints + nPoints%mPoints;
+
+	mSets = nPoints / mPoints;
+	mLastPoints = mPoints + nPoints%mPoints;
+
+	ConvexHull *myHull1 = malloc(sizeof(ConvexHull));
+	ConvexHull *myHull2 = malloc(sizeof(ConvexHull));
+	_convexHull_init(myHull1, 0, mPoints, coord);
+	_convexHull_init(myHull2, mPoints, nPoints, coord);
+
+	printf("Hello World!\n");
+	myHull1->indexHull = malloc(myHull1->nPoints);
+	myHull2->indexHull = malloc(myHull2->nPoints);
+	myHull1->nHull = graham_scan(myHull1->nPoints, myHull1->coord, myHull1->indexHull);
+	myHull2->nHull = graham_scan(myHull2->nPoints, myHull2->coord, myHull2->indexHull);
+
+	int left = argmin(nPoints, coord, 0);
+
+	// int mHull1 = graham_scan(mPoints, coord[])
+
+	// int (*mHull)[] = malloc(sizeof([0])*mPoints)
+	return 0;
+}
+
+
+void _convexHull_init(ConvexHull *myHull, int start, int stop, float coord[][2])
+{
+	myHull->Start = start;
+	myHull->Stop  = stop;
+
+	myHull->nPoints = stop-start;
+	myHull->coord = malloc(sizeof(coord[0])*myHull->nPoints);
+	for(int i=0; i<myHull->nPoints; i++) {
+		myHull->coord[i][0] = coord[start+i][0];
+		myHull->coord[i][1] = coord[start+i][1];
+	}
+
+	myHull->left = argmin(myHull->nPoints, myHull->coord, 0);
+	myHull->argsorted = malloc(myHull->nPoints);
+	argsort(myHull->nPoints, myHull->coord, 0, myHull->argsorted);
+>>>>>>> 83b3e5fa859bff824257da889aef1d5e108d7d43
 }

@@ -83,13 +83,21 @@ int main()
 	// we print the seed so you can get the distribution of points back
 	printf("seed=%d\n", seed);
 
-	const int nPoints = 1000;
+	const int nPoints = 10;
 	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
 #if 0 // put 1 for random polygon
 	random_polygon(coord, nPoints, 4);
 #else
 	random_points(coord, nPoints);
 #endif
+
+	/*
+	int* sorted = (int*)calloc(nPoints, sizeof(int));
+	argsort(0, nPoints, coord, 0, sorted);
+	for (int i=0; i<nPoints; i++) {
+		printf("%d  -- %.2f\n", sorted[i], coord[sorted[i]][0]);
+	}
+	*/
 
 	printf("Jarvis March Algorithm --- BEGIN\n");
 	// printf("Graham's scan Algorithm --- BEGIN\n");
@@ -98,7 +106,8 @@ int main()
 	int *indexHull = malloc(sizeof(int)*nPoints);
 
 	// int nHull = jarvis_march(nPoints, coord, indexHull);
-	int nHull = graham_scan(nPoints, coord, indexHull);
+	// int nHull = graham_scan(nPoints, coord, indexHull);
+	int nHull = chan_(nPoints, coord, indexHull, 15);
 
 	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
 	for (int i=0; i<nHull; i++) {
