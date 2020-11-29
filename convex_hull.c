@@ -1,18 +1,17 @@
 #include "convex_hull.h"
+#include <unistd.h>
 
-/*
-	static inline void insert(int N, int M, int* sorted)
-	{
-		int prev, next;
-		next = N;
-		for(int a=M; a<N; a++) {
-			prev = next;
-			next = sorted[a];
-			sorted[a] = prev;
-		}
-		sorted[N] = next;
+static inline void insert(int N, int M, int* sorted)
+{
+	int prev, next;
+	next = N;
+	for(int a=M; a<N; a++) {
+		prev = next;
+		next = sorted[a];
+		sorted[a] = prev;
 	}
-*/
+	sorted[N] = next;
+}
 
 static int argmin(int nPoints, float coord[][2], int axis)
 {
@@ -78,7 +77,7 @@ Output :
 	count     -- Amount of points in the convex Hull
 -------------------------------------------------
 */
-int jarvis_march(int nPoints, float coord[][2], int* indexHull)
+int jarvis_march(int nPoints, float coord[][2], int* indexHull, bov_window_t* window)
 {
 	/* Initialisation */
 	int left,prev,next,count;
@@ -115,11 +114,11 @@ int jarvis_march(int nPoints, float coord[][2], int* indexHull)
 		indexHull[count] = next;
 		prev = next;
 		count ++;
+		animate(coord, window, indexHull, count, nPoints);
 	}
 	return count;
 }
 
-<<<<<<< HEAD
 /*
 Graham's Scan Algorithm
 */
@@ -137,8 +136,6 @@ double turn_dir(float x1[2], float x2[2], float x3[2]){
 	return area;
 }
 
-=======
->>>>>>> 83b3e5fa859bff824257da889aef1d5e108d7d43
 
 /*
 Graham's Scan Algorithm
@@ -216,7 +213,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	ll_tracker = 2;
 
 	/* Step 6 : FOR nPoints-3 → 0 */
-	for(int i = nPoints-3; i > -1; i--){
+	for(int i = nPoints-3; i >-1; i--){
 		/* Step 6.1 : APPEND point 'i' to lower_list */
 		lower_list[ll_tracker] = sorted[i];
 		ll_tracker++;
@@ -257,7 +254,6 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	return ul_tracker + ll_tracker - 2;
 }
 
-<<<<<<< HEAD
 // DIVIDE AND CONQUER (FOR SPARTA)
 
 
@@ -330,65 +326,45 @@ int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]){
 
 	printf("size: %ld, expect: %d \n", sizeof(concat_V)/sizeof(concat_V[0]),length_V1+length_V2);
 	return concat_V;
-=======
-/*
-Chan's Algorithm
--------------------------------------------------
-Inputs :
-	nPoints   -- Amount of points in the coord vector
-	coord     -- Coordinates of points in the grid
-		axis 0 : x-direction
-		axis 1 : y-direction
-	indexHull -- Array of integer for indexing the points in the convex hull
-
-Output :
-	count     -- Amount of points in the convex Hull
--------------------------------------------------
-*/
-int chan_(int nPoints, float coord[][2], int* hull, int mPoints)
-{
-	int mSets,mLastPoints;
-	// mPoints = 10;
-	// mSets = nPoints /mPoints;
-	// mLastPoints = mPoints + nPoints%mPoints;
-
-	mSets = nPoints / mPoints;
-	mLastPoints = mPoints + nPoints%mPoints;
-
-	ConvexHull *myHull1 = malloc(sizeof(ConvexHull));
-	ConvexHull *myHull2 = malloc(sizeof(ConvexHull));
-	_convexHull_init(myHull1, 0, mPoints, coord);
-	_convexHull_init(myHull2, mPoints, nPoints, coord);
-
-	printf("Hello World!\n");
-	myHull1->indexHull = malloc(myHull1->nPoints);
-	myHull2->indexHull = malloc(myHull2->nPoints);
-	myHull1->nHull = graham_scan(myHull1->nPoints, myHull1->coord, myHull1->indexHull);
-	myHull2->nHull = graham_scan(myHull2->nPoints, myHull2->coord, myHull2->indexHull);
-
-	int left = argmin(nPoints, coord, 0);
-
-	// int mHull1 = graham_scan(mPoints, coord[])
-
-	// int (*mHull)[] = malloc(sizeof([0])*mPoints)
-	return 0;
 }
 
+// PLOT
+void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints){
+	//int nHull = sizeof(actual_hull)/sizeof(actual_hull[0]);
 
-void _convexHull_init(ConvexHull *myHull, int start, int stop, float coord[][2])
-{
-	myHull->Start = start;
-	myHull->Stop  = stop;
-
-	myHull->nPoints = stop-start;
-	myHull->coord = malloc(sizeof(coord[0])*myHull->nPoints);
-	for(int i=0; i<myHull->nPoints; i++) {
-		myHull->coord[i][0] = coord[start+i][0];
-		myHull->coord[i][1] = coord[start+i][1];
+	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
+	for (int i=0; i<nHull; i++) {
+		coordHull[i][0] = coord[actual_hull[i]][0];
+		coordHull[i][1] = coord[actual_hull[i]][1];
 	}
 
-	myHull->left = argmin(myHull->nPoints, myHull->coord, 0);
-	myHull->argsorted = malloc(myHull->nPoints);
-	argsort(myHull->nPoints, myHull->coord, 0, myHull->argsorted);
->>>>>>> 83b3e5fa859bff824257da889aef1d5e108d7d43
+	GLsizei nHull_GL   = (GLsizei) nHull;
+	GLfloat (*coordHull_GL)[2] = (GLfloat (*)[2]) coordHull;
+
+	const GLsizei nPoints_GL = (GLsizei) nPoints;
+	GLfloat (*coord_GL)[2] = (GLfloat (*)[2]) coord;
+
+	bov_points_t *coordDrawHull = bov_points_new(coordHull_GL, nHull_GL, GL_STATIC_DRAW);
+	bov_points_set_color(coordDrawHull, (GLfloat[4]) {1.0, 0.6, 0.3, 1.0});
+	bov_points_set_outline_color(coordDrawHull, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+	while(!bov_window_should_close(window)){
+		bov_points_set_width(coordDrawHull, 0.003);
+		bov_points_set_outline_width(coordDrawHull, 0.);
+
+		//bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+		bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+
+		bov_points_t *coordDraw = bov_points_new(coord_GL, nPoints_GL, GL_STATIC_DRAW);
+		bov_points_set_color(coordDraw, (GLfloat[4]) {0.0, 0.0, 0.0, 1.0});
+		bov_points_set_outline_color(coordDraw, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+		bov_points_draw(window, coordDraw, 0, nPoints);
+
+
+		bov_window_update(window);
+		sleep(1);
+		break;
+	}
+
 }
