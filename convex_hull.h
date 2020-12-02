@@ -7,26 +7,30 @@ typedef struct {
 
 	int nPoints;
 	float (*coord)[2];
-
-	int left;
-	int *argsorted;
+	GLsizei nPoints_GL;
+	GLfloat (*coord_GL)[2];
+	bov_points_t *coordDraw;
 
 	int nHull;
 	int *indexHull;
+	float (*coordHull)[2];
+	GLsizei nHull_GL;
+	GLfloat (*coordHull_GL)[2];
+	bov_points_t *coordDrawHull;
 } ConvexHull;
 
 void _convexHull_init(ConvexHull *myHull, int start, int stop, float coord[][2]);
+void _convexHull_initDraw(ConvexHull *myHull, int color);
 
-// void jarvis_march(GLsizei N, GLfloat* x_pos, GLfloat* y_pos, int* hull);
-int jarvis_march(int nPoints, float coord[][2], int* hull);
-int graham_scan(int nPoints, float coord[][2], int* hull);
-int chan_(int nPoints, float coord[][2], int* hull, int mPoints);
+/* Convex Hull Algorithms */
+int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]);
+int jarvis_march(int nPoints, float coord[][2], int* indexHull);
+int graham_scan(int nPoints, float coord[][2], int* indexHull);
+int chan_(int nPoints, float coord[][2], int* indexHull, int mPoints);
 
+/* Useful Functions */
 static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
 static float direction(float x1[2],float x2[2],float x3[2]);
-<<<<<<< HEAD
-
-void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
 
 //double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3);
 double turn_dir(float x1[2], float x2[2], float x3[2]);
@@ -35,6 +39,3 @@ int min_dist(int* points, float coord[][2], int I, int J);
 
 int* concat(int* V1, int* V2);
 
-int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]);
-=======
->>>>>>> 83b3e5fa859bff824257da889aef1d5e108d7d43
