@@ -1,18 +1,17 @@
 #include "convex_hull.h"
+#include <unistd.h>
 
-/*
-	static inline void insert(int N, int M, int* sorted)
-	{
-		int prev, next;
-		next = N;
-		for(int a=M; a<N; a++) {
-			prev = next;
-			next = sorted[a];
-			sorted[a] = prev;
-		}
-		sorted[N] = next;
+static inline void insert(int N, int M, int* sorted)
+{
+	int prev, next;
+	next = N;
+	for(int a=M; a<N; a++) {
+		prev = next;
+		next = sorted[a];
+		sorted[a] = prev;
 	}
-*/
+	sorted[N] = next;
+}
 
 static int argmin(int nPoints, float coord[][2], int axis)
 {
@@ -90,7 +89,7 @@ Output :
 	count     -- Amount of points in the convex Hull
 -------------------------------------------------
 */
-int jarvis_march(int nPoints, float coord[][2], int* indexHull)
+int jarvis_march(int nPoints, float coord[][2], int* indexHull, bov_window_t* window)
 {
 	/* Initialisation */
 	int left,prev,next,count;
@@ -127,6 +126,7 @@ int jarvis_march(int nPoints, float coord[][2], int* indexHull)
 		indexHull[count] = next;
 		prev = next;
 		count ++;
+		animate(coord, window, indexHull, count, nPoints);
 	}
 	return count;
 }
@@ -208,7 +208,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	ll_tracker = 2;
 
 	/* Step 6 : FOR nPoints-3 → 0 */
-	for(int i = nPoints-3; i > -1; i--){
+	for(int i = nPoints-3; i >-1; i--){
 		/* Step 6.1 : APPEND point 'i' to lower_list */
 		lower_list[ll_tracker] = sorted[i];
 		ll_tracker++;
@@ -574,4 +574,45 @@ void _convexHull_initDraw(ConvexHull *myHull, int color)
 		bov_points_set_width(myHull->coordDrawHull, 0.003);
 		bov_points_set_outline_width(myHull->coordDrawHull, 0.002);
 	}
+}
+
+// PLOT
+void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints){
+	//int nHull = sizeof(actual_hull)/sizeof(actual_hull[0]);
+
+	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
+	for (int i=0; i<nHull; i++) {
+		coordHull[i][0] = coord[actual_hull[i]][0];
+		coordHull[i][1] = coord[actual_hull[i]][1];
+	}
+
+	GLsizei nHull_GL   = (GLsizei) nHull;
+	GLfloat (*coordHull_GL)[2] = (GLfloat (*)[2]) coordHull;
+
+	const GLsizei nPoints_GL = (GLsizei) nPoints;
+	GLfloat (*coord_GL)[2] = (GLfloat (*)[2]) coord;
+
+	bov_points_t *coordDrawHull = bov_points_new(coordHull_GL, nHull_GL, GL_STATIC_DRAW);
+	bov_points_set_color(coordDrawHull, (GLfloat[4]) {1.0, 0.6, 0.3, 1.0});
+	bov_points_set_outline_color(coordDrawHull, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+	while(!bov_window_should_close(window)){
+		bov_points_set_width(coordDrawHull, 0.003);
+		bov_points_set_outline_width(coordDrawHull, 0.);
+
+		//bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+		bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+
+		bov_points_t *coordDraw = bov_points_new(coord_GL, nPoints_GL, GL_STATIC_DRAW);
+		bov_points_set_color(coordDraw, (GLfloat[4]) {0.0, 0.0, 0.0, 1.0});
+		bov_points_set_outline_color(coordDraw, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+		bov_points_draw(window, coordDraw, 0, nPoints);
+
+
+		bov_window_update(window);
+		sleep(1);
+		break;
+	}
+
 }
