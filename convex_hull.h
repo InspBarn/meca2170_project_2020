@@ -1,16 +1,20 @@
 #include "BOV.h"
 #include "inputs.h"
 
+#include <unistd.h>
+#include <time.h>
+
 struct convex_hull_t{
+	double time;
+	char *method;
+	int display;
+
 	int Start;
-	int Stop;
-
-	GLfloat *colorDraw;
-
 	int nPoints;
 	float (*coord)[2];
 	GLsizei nPoints_GL;
 	bov_points_t *coordDraw;
+	GLfloat *colorDraw;
 
 	int nHull;
 	int *hull_idxs;
@@ -24,7 +28,11 @@ void convex_hull_init(struct convex_hull_t *myHull,
 					  int stop,
 					  float coord[][2],
 					  int (*hull_function)(int,  float (*)[2], int *),
-					  int color);
+					  int color,
+					  int display);
+
+void convex_hull_display_init(struct convex_hull_t *hull,
+							  int color);
 
 void convex_hull_update(struct convex_hull_t *hull,
 						const int *idxs,
@@ -39,27 +47,36 @@ void convex_hull_partial_update(struct convex_hull_t *hull,
 struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull,
 											   const float point[2]);
 
+void convex_hull_display(bov_window_t *window,
+						 struct convex_hull_t *hull);
+
 // void update_coordinates(struct convex_hull_t *myHull);
 
 /* Convex Hull Algorithms */
 int empty_hull(int nPoints, float coord[][2], int* hull_idxs);
 int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]);
-int jarvis_march(int nPoints, float coord[][2], int* hull_idxs);
-int graham_scan(int nPoints, float coord[][2], int* hull_idxs);
-int chan_(int nPoints, float coord[][2], int* hull_idxs, int mPoints); //, bov_window_t* window);
 
-/* Useful Functions */
+struct convex_hull_t* jarvis_march(int nPoints,
+								   float coord[][2]);
+
+int graham_scan(int nPoints, float coord[][2], int* hull_idxs);
+
+struct convex_hull_t* chan_(int nPoints,
+							float coord[][2]);
+
+/* Useful Functions * /
 static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
 static float direction(float x1[2],float x2[2],float x3[2]);
 int min_dist(int* points, float coord[][2], int I, int J);
 int* concat(int* V1, int* V2);
+//*/
 
 // Display Time order
 #define TIME_STEP 5e4
 
 // Display Characteristics
 #define POINTS_WIDTH 5e-3
-#define POINTS_OUTLINE_WIDTH 5e-4
+#define POINTS_OUTLINE_WIDTH 1e-4
 
 // Define Some Colors
 #define RGBMAX 255.0
