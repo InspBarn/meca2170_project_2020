@@ -58,7 +58,7 @@ static int argmax(int nPoints, float coord[][2], int axis)
 	return argmax;
 }
 
-static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
+void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 {
 	argsorted_list[0] = 0;
 	int i,j; float x;
@@ -105,7 +105,6 @@ int empty_hull(int nPoints, float coord[][2], int* hull_idxs)
 	return 1;
 }
 
-
 /*
 -------------------------------------------------
 Inputs :
@@ -117,14 +116,13 @@ Output :
 	area      -- Area of the triangle between those 3 points
 -------------------------------------------------
 */
-static float direction(float x1[2], float x2[2], float x3[2])
+float direction(float x1[2], float x2[2], float x3[2])
 {
 	float area = (x1[0]*x2[1] - x2[0]*x1[1]) \
 			   - (x1[0]*x3[1] - x3[0]*x1[1]) \
 			   + (x2[0]*x3[1] - x3[0]*x2[1]);
 	return area;
 }
-
 
 /*
 Jarvis March Algorithm
@@ -252,6 +250,17 @@ end_of_jarvis:
 	return count;
 }
 
+/*
+Graham's Scan Algorithm
+*/
+
+//input: x and y coo of 3 points
+//output: >0 if the 3 points turn left (counter-clock) in the 1-2-3 way, <0 otherwise
+// non robuste: return 0 if points are aligned
+// double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3){
+// 	return (x1*(y2-y3) - x2*(y1-y3) + x3*(y1-y2));
+// }
+
 
 /*
 Graham's Scan Algorithm
@@ -269,8 +278,10 @@ Output :
 */
 int graham_scan(int nPoints, float coord[][2], int* hull)
 {
+	// bov_window_t* window = bov_window_new(800, 800, "Graham Scan Algorithm");
+
 	/* Initialisation */
-	int ul_tracker,ll_tracker,flag; double drct;
+	int ul_tracker,ll_tracker,flag; float drct;
 	int* upper_list = (int*)calloc(nPoints, sizeof(int));
 	int* lower_list = (int*)calloc(nPoints, sizeof(int));
 	flag = 0;
@@ -287,7 +298,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	ul_tracker = 2;
 
 	/* Step 3 : FOR 3 → nPoints */
-	for(int i = 2; i < nPoints; i++){
+	for( int i = 2; i < nPoints; i++){
 		/* Step 3.1 : APPEND point 'i' to upper_list */
 		upper_list[ul_tracker] = sorted[i];
 		ul_tracker++;
@@ -297,10 +308,11 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 						 coord[upper_list[ul_tracker-2]], \
 						 coord[upper_list[ul_tracker-1]]);
 		flag = 1;
-
+		//animate
+		// animate(coord, window, upper_list, ul_tracker, nPoints);
 		/* Step 3.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
-		while(flag &&  drct>=0){
+		while( flag &&  drct>=0){
 			/* DELETE the middle point */
 			upper_list[ul_tracker-2] = upper_list[ul_tracker-1];
 			upper_list[ul_tracker-1] = 0;
@@ -313,6 +325,8 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 								 coord[upper_list[ul_tracker-1]]);
 				flag = 1;
 			}
+			//Animate
+			// animate(coord, window, upper_list, ul_tracker, nPoints);
 		}
 
 	}
@@ -339,6 +353,8 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 						 coord[lower_list[ll_tracker-1]]);
 		flag = 1;
 
+		//animate
+		// animate(coord, window, lower_list, ll_tracker, nPoints);
 		/* Step 6.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
 		while(flag && drct >=0){
@@ -354,6 +370,8 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 								 coord[lower_list[ll_tracker-1]]) / 2.0;
 				flag = 1;
 			}
+			//animate
+			// animate(coord, window, lower_list, ll_tracker, nPoints);
 		}
 
 	}
@@ -373,8 +391,7 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 // DIVIDE AND CONQUER (FOR SPARTA)
 
 
-int* concat(int* V1, int* V2)
-{
+int* concat(int* V1, int* V2){
 	int length_V1 = sizeof(V1) / sizeof(V1[0]);
 	int length_V2 = sizeof(V2) / sizeof(V2[0]);
 
@@ -389,12 +406,25 @@ int* concat(int* V1, int* V2)
 	return concat_V;
 }
 
-int min_dist(int* points, float coord[][2], int I, int J)
-{
-	double min_dist=10000; double dist;
+int max_dist(int* points, int size_points, float coord[][2], int I, int J){
+	double max_dist=-10000; float dist;
+	int max_point = -1;
+
+	for(int i=0; i< size_points; i++){
+		dist = direction(coord[I], coord[J], coord[points[i]]);
+		if(dist>max_dist){
+			max_dist=dist;
+			max_point = points[i];
+		}
+	}
+	return max_point;
+}
+
+int min_dist(int* points, int size_points, float coord[][2], int I, int J){
+	double min_dist=10000; float dist;
 	int min_point = -1;
 
-	for(int i=0; i< sizeof(points) / sizeof(points[0]); i++){
+	for(int i=0; i< size_points; i++){
 		dist = direction(coord[I], coord[J], coord[points[i]]);
 		if(dist<min_dist){
 			min_dist=dist;
@@ -404,17 +434,41 @@ int min_dist(int* points, float coord[][2], int I, int J)
 	return min_point;
 }
 
-int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2])
-{
+int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left){
 	int* I = calloc(size_S, sizeof(int));
 	int* J = calloc(size_S, sizeof(int));
 	int* tab = calloc(2, sizeof(int));
 	int size_I = 0; int size_J = 0; int V=0;
 	if(size_S==0){
-		tab[0] = V_i; tab[1] = V_j;
-		return tab;
-	} else {
-		V = min_dist(S, coord, V_i, V_j);
+		return_hull[0] = V_i; return_hull[1] = V_j;
+		return 2;
+	}else if(flag_left==1){
+		V = max_dist(S, size_S, coord, V_i, V_j);
+		for(int i=0; i< size_S; i++){
+			if(direction(coord[V_i], coord[V],coord[S[i]]) > 0){
+				I[size_I] = S[i];
+				size_I++;
+			} else if (direction(coord[V], coord[V_j], coord[S[i]]) > 0 ){
+				J[size_J] = S[i];
+				size_J++;
+			}
+		}
+
+		int* V1 = calloc(size_I+2, sizeof(int));
+		int* V2 = calloc(size_J+2, sizeof(int));
+
+		int length_V1 = quick_hull(I, size_I, V_i, V, coord, V1, 1);
+		int length_V2 = quick_hull(J, size_J, V, V_j, coord, V2, 1);
+
+		for(int i=0; i<length_V1; i++){
+			return_hull[i] = V1[i];
+		}
+		for(int j=0; j<length_V2; j++){
+			return_hull[length_V1+j] = V2[j];
+		}
+		return length_V1+length_V2;
+	}else{
+		V = min_dist(S, size_S, coord, V_i, V_j);
 		for(int i=0; i< size_S; i++){
 			if(direction(coord[V_i], coord[V],coord[S[i]]) < 0){
 				I[size_I] = S[i];
@@ -422,29 +476,64 @@ int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2])
 			} else if (direction(coord[V], coord[V_j], coord[S[i]]) < 0 ){
 				J[size_J] = S[i];
 				size_J++;
-			} else{
-
 			}
 		}
+		int* V1 = calloc(size_I+2, sizeof(int));
+		int* V2 = calloc(size_J+2, sizeof(int));
 
+		int length_V1 = quick_hull(I, size_I, V_i, V, coord, V1, 0);
+		int length_V2 = quick_hull(J, size_J, V, V_j, coord, V2, 0);
+
+		for(int i=0; i<length_V1; i++){
+			return_hull[i] = V1[i];
+		}
+		for(int j=0; j<length_V2; j++){
+			return_hull[length_V1+j] = V2[j];
+		}
+		return length_V1+length_V2;
 	}
-	int* V1 = quick_hull(I, size_I, V_i, V, coord);
-	int* V2 = quick_hull(J, size_J, V, V_j, coord);
+}
 
-	int length_V1 = (int)(sizeof(V1) / sizeof(V1[0]));
-	int length_V2 = (int)(sizeof(V2) / sizeof(V2[0]));
+// PLOT
+void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints){
+	//int nHull = sizeof(actual_hull)/sizeof(actual_hull[0]);
 
-
-	int* concat_V = calloc((length_V1+length_V2), sizeof(int));
-	for(int i=0; i<length_V1; i++){
-		concat_V[i] = V1[i];
-	}
-	for(int j=0; j<length_V2; j++){
-		concat_V[length_V1+j] = V2[j];
+	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*nHull);
+	for (int i=0; i<nHull; i++) {
+		coordHull[i][0] = coord[actual_hull[i]][0];
+		coordHull[i][1] = coord[actual_hull[i]][1];
 	}
 
-	printf("size: %ld, expect: %d \n", sizeof(concat_V)/sizeof(concat_V[0]),length_V1+length_V2);
-	return concat_V;
+	GLsizei nHull_GL   = (GLsizei) nHull;
+	GLfloat (*coordHull_GL)[2] = (GLfloat (*)[2]) coordHull;
+
+	const GLsizei nPoints_GL = (GLsizei) nPoints;
+	GLfloat (*coord_GL)[2] = (GLfloat (*)[2]) coord;
+
+	const bov_order_t *coordDrawHull = bov_order_new((GLuint*) actual_hull, nHull_GL, GL_DYNAMIC_DRAW);
+	// bov_points_set_color(coordDrawHull, (GLfloat[4]) {1.0, 0.6, 0.3, 1.0});
+	// bov_points_set_outline_color(coordDrawHull, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+	while(!bov_window_should_close(window)){
+		bov_points_t *coordDraw = bov_points_new(coord_GL, nPoints_GL, GL_STATIC_DRAW);
+		bov_points_set_width(coordDraw, 0.003);
+		bov_points_set_outline_width(coordDraw, 0.);
+
+
+		//bov_line_loop_draw(window, coordDrawHull, 0, nHull);
+		bov_line_strip_draw_with_order(window, coordDraw, coordDrawHull, 0, nHull);
+
+		bov_points_set_color(coordDraw, (GLfloat[4]) {0.0, 0.0, 0.0, 1.0});
+		bov_points_set_outline_color(coordDraw, (GLfloat[4]) {0.3, 0.12, 0.0, 0.25});
+
+		bov_points_draw(window, coordDraw, 0, nPoints);
+
+
+		bov_window_update(window);
+		sleep(0.1);
+		break;
+	}
+
 }
 
 /* ----------------------------------------------
@@ -607,7 +696,7 @@ int chan_(int nPoints, float coord[][2], int* hull_idxs, int mPoints) //, bov_wi
 			goto end_of_march;
 		}
 	}
-	
+
 	convex_hull_update(display, hull_idxs, count);
 
 	while(!bov_window_should_close(window)) {
@@ -683,7 +772,7 @@ void convex_hull_update(struct convex_hull_t *hull, const int *idxs, int n)
 		hull->hull_idxs[i] = idxs[i];
 
 	hull->nHull_GL = (GLsizei) n;
-	hull->hullDraw = bov_order_update(hull->hullDraw, 
+	hull->hullDraw = bov_order_update(hull->hullDraw,
 										(GLuint*) idxs,
 										(GLsizei) n);
 }
@@ -719,7 +808,7 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 			coord[i][0] = hull->coord[i][0];
 			coord[i][1] = hull->coord[i][1];
 		}
-		coord[nPoints-1][0] = point[0];		
+		coord[nPoints-1][0] = point[0];
 		coord[nPoints-1][1] = point[1];
 
 		convex_hull_init(hull_new, 0, nPoints, coord, empty_hull, -1);
@@ -740,7 +829,7 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 				hull_new->hull_idxs[i] = hull->hull_idxs[hull_idxs[i]-1];
 		}
 		hull_new->nHull_GL = (GLsizei) hull_new->nHull;
-		hull_new->hullDraw = bov_order_update(hull_new->hullDraw, 
+		hull_new->hullDraw = bov_order_update(hull_new->hullDraw,
 											(GLuint*) hull_new->hull_idxs,
 											(GLsizei) hull_new->nHull_GL);
 	} else {

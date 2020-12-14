@@ -39,20 +39,26 @@ void convex_hull_partial_update(struct convex_hull_t *hull,
 struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull,
 											   const float point[2]);
 
-// void update_coordinates(struct convex_hull_t *myHull);
+// void jarvis_march(GLsizei N, GLfloat* x_pos, GLfloat* y_pos, int* hull);
+void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *display, int end_of);
 
-/* Convex Hull Algorithms */
-int empty_hull(int nPoints, float coord[][2], int* hull_idxs);
-int* quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2]);
 int jarvis_march(int nPoints, float coord[][2], int* hull_idxs);
-int graham_scan(int nPoints, float coord[][2], int* hull_idxs);
-int chan_(int nPoints, float coord[][2], int* hull_idxs, int mPoints); //, bov_window_t* window);
 
-/* Useful Functions */
-static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
-static float direction(float x1[2],float x2[2],float x3[2]);
-int min_dist(int* points, float coord[][2], int I, int J);
+int graham_scan(int nPoints, float coord[][2], int* hull);
+
+float direction(float x1[2],float x2[2],float x3[2]);
+
+void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
+
+int max_dist(int* points, int size_points, float coord[][2], int I, int J);
+
+int min_dist(int* points, int size_points, float coord[][2], int I, int J);
+
 int* concat(int* V1, int* V2);
+
+int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left);
+
+void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints);
 
 // Display Time order
 #define TIME_STEP 5e4
