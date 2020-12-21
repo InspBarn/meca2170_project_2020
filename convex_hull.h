@@ -5,13 +5,8 @@
 
 #define GRAHAM_ANIMATION 0
 
-#define CHAN_PRESENTATION_ 0
 #define CHAN_ANIMATION 0
-#if CHAN_ANIMATION
-#define CHAN_PRESENTATION CHAN_PRESENTATION_
-#else
-#define CHAN_PRESENTATION 0
-#endif
+#define CHAN_PRESENTATION_ 0
 
 // Display Time Step Order for Animation
 #define TIME_STEP 5e4
@@ -27,7 +22,8 @@
 	next point is not the leftest one.
 ---------------------------------------------- */
 struct convex_hull_t* jarvis_march(int nPoints,
-								   float coord[][2]);
+								   float coord[][2],
+								   int display);
 
 /* ----------------------------------------------
 	Return a convex_hull_t structure which compute the convex hull
@@ -43,7 +39,8 @@ struct convex_hull_t* jarvis_march(int nPoints,
 	remove last points which are inside the final convex hull.
 ---------------------------------------------- */
 struct convex_hull_t* graham_scan(int nPoints,
-								  float coord[][2]);
+								  float coord[][2],
+								  int display);
 
 /* ----------------------------------------------
 	Return a convex_hull_t structure which compute the convex hull
@@ -57,9 +54,17 @@ struct convex_hull_t* graham_scan(int nPoints,
 	compute the global convex hull.
 ---------------------------------------------- */
 struct convex_hull_t* chan_(int nPoints,
-							float coord[][2]);
+							float coord[][2],
+							int display);
 
-void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *display, int end_of);
+// CHAN_PRESENTATION cannot be 1 if CHAN_ANIMATION is 0
+#if CHAN_ANIMATION
+#define CHAN_PRESENTATION CHAN_PRESENTATION_
+#else
+#define CHAN_PRESENTATION 0
+#endif
+
+void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *hull, int end_of);
 
 
 int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left);
