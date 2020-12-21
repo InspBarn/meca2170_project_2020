@@ -27,8 +27,6 @@ void convex_hull_init(struct convex_hull_t *myHull,
 					  int start,
 					  int stop,
 					  float coord[][2],
-					  int (*hull_function)(int,  float (*)[2], int *),
-					  int color,
 					  int display);
 
 void convex_hull_display_init(struct convex_hull_t *hull,
@@ -58,14 +56,15 @@ int empty_hull(int nPoints, float coord[][2], int* hull_idxs);
 struct convex_hull_t* jarvis_march(int nPoints,
 								   float coord[][2]);
 
-int graham_scan(int nPoints, float coord[][2], int* hull_idxs);
+struct convex_hull_t* graham_scan(int nPoints,
+								  float coord[][2]);
 
 struct convex_hull_t* chan_(int nPoints,
 							float coord[][2]);
 
 void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *display, int end_of);
 
-int graham_scan(int nPoints, float coord[][2], int* hull);
+// int graham_scan(int nPoints, float coord[][2], int* hull);
 
 float direction(float x1[2],float x2[2],float x3[2]);
 

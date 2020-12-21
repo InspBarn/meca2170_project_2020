@@ -164,7 +164,7 @@ struct convex_hull_t* jarvis_march(int nPoints, float coord[][2])
 #endif
 
 	struct convex_hull_t *result = malloc(sizeof(struct convex_hull_t));
-	convex_hull_init(result, 0, nPoints, coord, empty_hull, -1, JARVIS_ANIMATION);
+	convex_hull_init(result, 0, nPoints, coord, JARVIS_ANIMATION);
 	int *hull_idxs = calloc(nPoints, sizeof(int));
 
 	/* Step 1 : Take the leftest point */
@@ -263,15 +263,25 @@ Output :
 	count     -- Amount of points in the convex Hull
 -------------------------------------------------
 */
-int graham_scan(int nPoints, float coord[][2], int* hull)
+#define GRAHAM_ANIMATION 0
+
+struct convex_hull_t* graham_scan(int nPoints, float coord[][2])
 {
 	// bov_window_t* window = bov_window_new(800, 800, "Graham Scan Algorithm");
 
 	/* Initialisation */
-	int ul_tracker,ll_tracker,flag; float drct;
-	int* upper_list = (int*)calloc(nPoints, sizeof(int));
-	int* lower_list = (int*)calloc(nPoints, sizeof(int));
+	clock_t t0,t1;
+	int tracker,flag; float drct;
+	int *hull_idxs = (int*)calloc(nPoints, sizeof(int));
 	flag = 0;
+
+#if GRAHAM_ANIMATION
+	bov_window_t* window = bov_window_new(800, 800, "Graham Scan Algorithm");
+	bov_window_set_color(window, (GLfloat[]){0.9f, 0.85f, 0.8f, 1.0f});
+#endif
+
+	struct convex_hull_t *result = malloc(sizeof(struct convex_hull_t));
+	convex_hull_init(result, 0, nPoints, coord, GRAHAM_ANIMATION);
 
 	/* Step 1 : Sort the point wrt x
 		Return (int*) sorted[N] */
@@ -279,100 +289,123 @@ int graham_scan(int nPoints, float coord[][2], int* hull)
 	argsort(nPoints, coord, 0, sorted);
 
 	/* Step 2 : Store the 2 leftest points in upper_list */
-	upper_list[0] = sorted[0];
-	upper_list[1] = sorted[1];
+	hull_idxs[0] = sorted[0]; hull_idxs[1] = sorted[1];
 	// tracker of the next free position
-	ul_tracker = 2;
+	tracker = 2;
 
+	t0 = clock();
 	/* Step 3 : FOR 3 → nPoints */
 	for( int i = 2; i < nPoints; i++){
 		/* Step 3.1 : APPEND point 'i' to upper_list */
-		upper_list[ul_tracker] = sorted[i];
-		ul_tracker++;
+		hull_idxs[tracker] = sorted[i];
+		tracker ++;
 
+#if GRAHAM_ANIMATION
+		convex_hull_update(result, hull_idxs, tracker);
+		jarvis_march_anim(window, result, 0);
+		usleep(TIME_STEP);
+		// if (bov_window_should_close(window))
+		// 	goto end_of_jarvis;
+#endif
 
-		drct = direction(coord[upper_list[ul_tracker-3]], \
-						 coord[upper_list[ul_tracker-2]], \
-						 coord[upper_list[ul_tracker-1]]);
 		flag = 1;
-		//animate
-		// animate(coord, window, upper_list, ul_tracker, nPoints);
+		drct = direction(coord[hull_idxs[tracker-3]], \
+						 coord[hull_idxs[tracker-2]], \
+						 coord[hull_idxs[tracker-1]]);
+
 		/* Step 3.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
 		while( flag &&  drct>=0){
 			/* DELETE the middle point */
-			upper_list[ul_tracker-2] = upper_list[ul_tracker-1];
-			upper_list[ul_tracker-1] = 0;
-			ul_tracker--;
+			hull_idxs[tracker-2] = hull_idxs[tracker-1];
+			hull_idxs[tracker-1] = 0;
+			tracker--;
+
+#if GRAHAM_ANIMATION
+			convex_hull_update(result, hull_idxs, tracker);
+			jarvis_march_anim(window, result, 0);
+			usleep(TIME_STEP);
+			// if (bov_window_should_close(window))
+			// 	goto end_of_jarvis;
+#endif
 
 			flag = 0;
-			if (ul_tracker > 2){
-				drct = direction(coord[upper_list[ul_tracker-3]],
-								 coord[upper_list[ul_tracker-2]],
-								 coord[upper_list[ul_tracker-1]]);
+			if (tracker > 2){
 				flag = 1;
+				drct = direction(coord[hull_idxs[tracker-3]],
+								 coord[hull_idxs[tracker-2]],
+								 coord[hull_idxs[tracker-1]]);
 			}
 			//Animate
 			// animate(coord, window, upper_list, ul_tracker, nPoints);
 		}
-
 	}
 
-	/* Step 4 : Store the points' indexes of the upper convex hull */
-	for(int i=0; i<ul_tracker; i++){
-		hull[i] = upper_list[i];
-	}
+	int up_tracker = tracker-1;
 
-	/* Step 5 : Store the 2 rightest points in lower_list */
-	lower_list[0] = sorted[nPoints-1];
-	lower_list[1] = sorted[nPoints-2];
+	/* Step 4 : Store the 2 rightest points in lower_list */
+	// hull_idxs[tracker] = sorted[nPoints-1];
+	hull_idxs[tracker] = sorted[nPoints-2];
 	// tracker of the next free position
-	ll_tracker = 2;
+	tracker = tracker+1;
 
-	/* Step 6 : FOR nPoints-3 → 0 */
-	for(int i = nPoints-3; i >-1; i--){
-		/* Step 6.1 : APPEND point 'i' to lower_list */
-		lower_list[ll_tracker] = sorted[i];
-		ll_tracker++;
+	/* Step 5 : FOR nPoints-3 → 0 */
+	for(int i=nPoints-3; i >-1; i--){
+		/* Step 5.1 : APPEND point 'i' to lower_list */
+		hull_idxs[tracker] = sorted[i];
+		tracker++;
 
-		drct = direction(coord[lower_list[ll_tracker-3]],
-						 coord[lower_list[ll_tracker-2]],
-						 coord[lower_list[ll_tracker-1]]);
+#if GRAHAM_ANIMATION
+		convex_hull_update(result, hull_idxs, tracker);
+		jarvis_march_anim(window, result, 0);
+		usleep(TIME_STEP);
+		// if (bov_window_should_close(window))
+		// 	goto end_of_jarvis;
+#endif
+
 		flag = 1;
+		drct = direction(coord[hull_idxs[tracker-3]],
+						 coord[hull_idxs[tracker-2]],
+						 coord[hull_idxs[tracker-1]]);
 
-		//animate
-		// animate(coord, window, lower_list, ll_tracker, nPoints);
-		/* Step 6.2 : WHILE sizeof(upper_list) > 2
+		/* Step 5.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
 		while(flag && drct >=0){
 			// DELETE the middle point
-			lower_list[ll_tracker-2] = lower_list[ll_tracker-1];
-			lower_list[ll_tracker-1] = 0;
-			ll_tracker--;
+			hull_idxs[tracker-2] = hull_idxs[tracker-1];
+			hull_idxs[tracker-1] = 0;
+			tracker--;
+
+#if GRAHAM_ANIMATION
+			convex_hull_update(result, hull_idxs, tracker);
+			jarvis_march_anim(window, result, 0);
+			usleep(TIME_STEP);
+			// if (bov_window_should_close(window))
+			// 	goto end_of_jarvis;
+#endif
 
 			flag = 0;
-			if(ll_tracker > 2){
-				drct = direction(coord[lower_list[ll_tracker-3]],
-								 coord[lower_list[ll_tracker-2]],
-								 coord[lower_list[ll_tracker-1]]) / 2.0;
+			if(tracker-up_tracker > 2){
 				flag = 1;
+				drct = direction(coord[hull_idxs[tracker-3]],
+								 coord[hull_idxs[tracker-2]],
+								 coord[hull_idxs[tracker-1]]);
 			}
-			//animate
-			// animate(coord, window, lower_list, ll_tracker, nPoints);
 		}
-
 	}
+	t1 = clock();
 
-	/* Step 7 : Store the points' indexes of the lower convex hull */
-	for(int i=1; i<ll_tracker-1; i++){
-		hull[ul_tracker-1+i] = lower_list[i];
-	}
+	result->method = "Graham Scan";
+	result->time = (double) (t1-t0) / CLOCKS_PER_SEC;
+	convex_hull_update(result, hull_idxs, tracker-1);
 
 	/* Termination */
-	free(lower_list);
-	free(upper_list);
-
-	return ul_tracker + ll_tracker - 2;
+	free(sorted);
+	free(hull_idxs);
+#if GRAHAM_ANIMATION
+	bov_window_delete(window);
+#endif
+	return result;
 }
 
 // DIVIDE AND CONQUER (FOR SPARTA)
@@ -568,8 +601,8 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 #endif
 
 	// Display for Each Subsets
-	struct convex_hull_t *display = malloc(sizeof(struct convex_hull_t));
-	convex_hull_init(display, 0, nPoints, coord, empty_hull, -1, CHAN_ANIMATION);
+	struct convex_hull_t *result = malloc(sizeof(struct convex_hull_t));
+	convex_hull_init(result, 0, nPoints, coord, CHAN_ANIMATION);
 
 	/* Step 1 : Evaluate the Amount of Partition Required */
 	mSets = nPoints / mPoints;
@@ -581,21 +614,37 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 
 	/* Step 2 : Creation of all the Partitions into a Vector */
 	struct convex_hull_t myHulls[mSets];
+	float (*coord_)[2] = malloc(sizeof(coord_[0])*mPoints);
 	for (int i=0; i<mSets-1; i++) {
-		convex_hull_init(&myHulls[i], mPoints*i, mPoints*(i+1),
-			coord, graham_scan, i%MAXCOLORS, CHAN_ANIMATION);
+		for (int j=0; j<mPoints; j++) {
+			coord_[j][0] = coord[mPoints*i+j][0];
+			coord_[j][1] = coord[mPoints*i+j][1];
+		}
+		myHulls[i] = *graham_scan(mPoints, coord_);
+		myHulls[i].Start = i*mPoints;
 		countMax = countMax + myHulls[i].nHull;
 	}
-	convex_hull_init(&myHulls[mSets-1], mPoints*(mSets-1), nPoints,
-		coord, graham_scan, (mSets-1)%MAXCOLORS, CHAN_ANIMATION);
+
+	for (int j=0; j<mLastPoints; j++) {
+		coord_[j][0] = coord[mPoints*(mSets-1)+j][0];
+		coord_[j][1] = coord[mPoints*(mSets-1)+j][1];
+	}
+	myHulls[mSets-1] = *graham_scan(mLastPoints, coord_);
+	myHulls[mSets-1].Start = (mSets-1)*mPoints;
 	countMax = countMax + myHulls[mSets-1].nHull;
+
 	int *hull_idxs = calloc(countMax, sizeof(int));
 
+#if CHAN_ANIMATION
+	for (int i==0; i<mSets; i++)
+		convex_hull_display_init(&myHulls[i], i%MAXCOLORS);
+#endif
+
 #if CHAN_PRESENTATION
-	bov_points_draw(window, display->coordDraw, 0, display->nPoints_GL);
+	bov_points_draw(window, result->coordDraw, 0, result->nPoints_GL);
 	bov_window_update(window);
 	for (int i=0; i<mSets; i++) {
-		bov_points_draw(window, display->coordDraw, 0, display->nPoints_GL);
+		bov_points_draw(window, result->coordDraw, 0, result->nPoints_GL);
 		bov_points_draw(window, myHulls[i].coordDraw, 0, myHulls[i].nPoints_GL);
 		bov_line_loop_draw_with_order(window, myHulls[i].coordDraw, myHulls[i].hullDraw, 0, myHulls[i].nHull_GL);
 		bov_window_update(window);
@@ -630,7 +679,7 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 	next = left;
 	count = 0;
 	hull_idxs[0] = left;
-	// display->hull_idxs[0] = left;
+	// result->hull_idxs[0] = left;
 
 	/* Step 2 : Compute the hull point by point
 		STOP Condition : The point found to be the next on the hull is left
@@ -660,11 +709,11 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 
 #if CHAN_ANIMATION
 		hull_idxs[count] = next;
-		convex_hull_update(display, hull_idxs, count+1);
+		convex_hull_update(result, hull_idxs, count+1);
 
 		for (int i=0; i<mSets; i++)
 			bov_line_loop_draw_with_order(window, myHulls[i].coordDraw, myHulls[i].hullDraw, 0, myHulls[i].nHull_GL);
-		bov_line_strip_draw_with_order(window, display->coordDraw, display->hullDraw, 0, display->nHull_GL);
+		bov_line_strip_draw_with_order(window, result->coordDraw, result->hullDraw, 0, result->nHull_GL);
 		bov_window_update(window);
 		usleep(TIME_STEP);
 
@@ -694,13 +743,13 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 			}
 
 #if CHAN_ANIMATION
-			// convex_hull_partial_update(display, &mySetNext, count, count+1, count+1);
+			// convex_hull_partial_update(result, &mySetNext, count, count+1, count+1);
 			hull_idxs[count] = mySetNext;
-			convex_hull_update(display, hull_idxs, count+1);
+			convex_hull_update(result, hull_idxs, count+1);
 
 			for (int i=0; i<mSets; i++)
 				bov_line_loop_draw_with_order(window, myHulls[i].coordDraw, myHulls[i].hullDraw, 0, myHulls[i].nHull_GL);
-			bov_line_strip_draw_with_order(window, display->coordDraw, display->hullDraw, 0, display->nHull_GL);
+			bov_line_strip_draw_with_order(window, result->coordDraw, result->hullDraw, 0, result->nHull_GL);
 			bov_window_update(window);
 			usleep(TIME_STEP);
 #endif
@@ -710,23 +759,23 @@ struct convex_hull_t* chan_(int nPoints, float coord[][2])
 				next = mySetNext;
 		}
 	}
+	t1 = clock();
+	convex_hull_update(result, hull_idxs, count);
 
-	convex_hull_update(display, hull_idxs, count);
+	result->method = "Chan";
+	result->time = (double) (t1-t0) / CLOCKS_PER_SEC;
 
-	display->method = "Chan";
-	display->time = (double) (t1-t0) / CLOCKS_PER_SEC;
-
-	convex_hull_update(display, hull_idxs, count);
+	convex_hull_update(result, hull_idxs, count);
 
 end_of_march:
 	free(hull_idxs);
 #if CHAN_ANIMATION
 	bov_window_delete(window);
 #endif
-	return display;
+	return result;
 }
 
-void convex_hull_init(struct convex_hull_t *myHull, int start, int stop, float coord[][2], int (*hull_function)(int,  float (*)[2], int *), int color, int display)
+void convex_hull_init(struct convex_hull_t *myHull, int start, int stop, float coord[][2], int display)
 {
 	myHull->display = display;
 	myHull->Start = start;
@@ -739,11 +788,12 @@ void convex_hull_init(struct convex_hull_t *myHull, int start, int stop, float c
 		myHull->coord[i][0] = coord[start+i][0];
 		myHull->coord[i][1] = coord[start+i][1];
 	}
-
-	myHull->nHull = hull_function(myHull->nPoints, myHull->coord, myHull->hull_idxs);
+	myHull->nHull = 1;
+	myHull->hull_idxs[0] = 0;
+	// myHull->nHull = hull_function(myHull->nPoints, myHull->coord, myHull->hull_idxs);
 
 	if (display)
-		convex_hull_display_init(myHull, color);
+		convex_hull_display_init(myHull, -1);
 }
 
 void convex_hull_display_init(struct convex_hull_t *hull, int color)
@@ -834,8 +884,9 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 		coord[nPoints-1][0] = point[0];
 		coord[nPoints-1][1] = point[1];
 
-		convex_hull_init(hull_new, 0, nPoints, coord, empty_hull, -1, 1);
+		convex_hull_init(hull_new, 0, nPoints, coord, 1);
 
+		/*
 		nPoints = hull->nHull+1;
 		int *hull_idxs = calloc(nPoints, sizeof(int));
 		coord[0][0] = point[0]; coord[0][1] = point[1];
@@ -855,6 +906,7 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 		hull_new->hullDraw = bov_order_update(hull_new->hullDraw,
 											(GLuint*) hull_new->hull_idxs,
 											(GLsizei) hull_new->nHull_GL);
+		*/
 	} else {
 		/* The considered 'point' is in my set 'coord'
 			→ Was it part of the convex hull ?
@@ -880,7 +932,7 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 				hull_idxs[i] = hull_idxs[i] -1;
 		}
 
-		convex_hull_init(hull_new, 0, nPoints, coord, empty_hull, -1, 1);
+		convex_hull_init(hull_new, 0, nPoints, coord, 1);
 
 		int idh = argfind(hull->nHull, hull->hull_idxs, idx);
 		if (idh!=-1) {
