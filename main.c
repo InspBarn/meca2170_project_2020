@@ -13,7 +13,7 @@ int main()
 	// we print the seed so you can get the distribution of points back
 	printf("seed=%d\n", seed);
 
-	const int nPoints = 1000000;
+	const int nPoints = 100000;
 	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
 #if 0 // put 1 for random polygon
 	random_polygon(coord, nPoints, 4);
@@ -42,7 +42,7 @@ int main()
 	// 		right_tracker++;
 	// 	}
 	// }
-	
+
 	printf("Graham's scan Algorithm --- BEGIN\n");
 
 	clock_t t0 = clock();
@@ -87,7 +87,7 @@ int main()
 	//*
 	bov_window_t* window = bov_window_new(800, 800, "Convex Hull Algorithm");
 	bov_window_set_color(window, (GLfloat[]){0.9f, 0.85f, 0.8f, 1.0f});
-	
+
 	const GLsizei nPoints_GL = (GLsizei) nPoints;
 	GLfloat (*coord_GL)[2] = (GLfloat (*)[2]) coord;
 
@@ -112,10 +112,12 @@ int main()
 	//*/
 
 	printf("Convex Hull Algorithm --- BEGIN\n");
-
-	// struct convex_hull_t *hull = jarvis_march(nPoints, coord);
-	// struct convex_hull_t *hull = graham_scan(nPoints, coord);
-	struct convex_hull_t *hull = chan_(nPoints, coord);
+	clock_t start = clock();
+	struct convex_hull_t *hull = jarvis_march(nPoints, coord);
+	//struct convex_hull_t *hull = graham_scan(nPoints, coord);
+	//struct convex_hull_t *hull = chan_(nPoints, coord);
+  clock_t end = clock();
+	printf("Time = %f \n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	printf("Convex Hull Algorithm --- END\n");
 	printf("   →  Method : %s\n", hull->method);

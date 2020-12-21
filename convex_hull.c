@@ -57,19 +57,49 @@ static int argmax(int nPoints, float coord[][2], int axis)
 	return argmax;
 }
 
+struct sort
+{
+    float value;
+    int index;
+};
+int cmp(const void *a, const void *b)
+{
+    struct sort *a1 = (struct sort *)a;
+    struct sort *a2 = (struct sort *)b;
+    if ((*a1).value > (*a2).value)
+        return -1;
+    else if ((*a1).value < (*a2).value)
+        return 1;
+    else
+        return 0;
+}
+
 void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 {
-	argsorted_list[0] = 0;
-	int i,j; float x;
-	for(i=1; i<nPoints; i++) {
-		x = coord[i][axis];
-		for (j=i; j>0; j--) {
-			if (x<coord[argsorted_list[j-1]][axis]) {
-				argsorted_list[j] = argsorted_list[j-1];
-			} else {break;}
+	struct sort array[nPoints];
+    for (int i = 0; i < nPoints; i++)
+    {
+        array[i].value = coord[i][axis];
+        array[i].index = i;
+    }
+    //sort objects array according to value maybe using qsort
+    qsort(array, nPoints, sizeof(array[0]), cmp);
+    for (int i = 0; i < nPoints; i++){
+			argsorted_list[i] = array[i].index;
 		}
-		argsorted_list[j] = i;
-	}
+
+
+	// argsorted_list[0] = 0;
+	// int i,j; float x;
+	// for(i=1; i<nPoints; i++) {
+	// 	x = coord[i][axis];
+	// 	for (j=i; j>0; j--) {
+	// 		if (x<coord[argsorted_list[j-1]][axis]) {
+	// 			argsorted_list[j] = argsorted_list[j-1];
+	// 		} else {break;}
+	// 	}
+	// 	argsorted_list[j] = i;
+	// }
 }
 
 static int argfind(int nPoints, int *vec, int idx)
