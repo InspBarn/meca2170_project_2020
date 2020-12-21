@@ -1,4 +1,4 @@
-//#include "inputs.h"
+#include "inputs.h"
 #include "convex_hull.h"
 #include <time.h>
 
@@ -113,10 +113,10 @@ int main()
 
 	printf("Convex Hull Algorithm --- BEGIN\n");
 	clock_t start = clock();
-	struct convex_hull_t *hull = jarvis_march(nPoints, coord);
-	//struct convex_hull_t *hull = graham_scan(nPoints, coord);
-	//struct convex_hull_t *hull = chan_(nPoints, coord);
-  clock_t end = clock();
+	// struct convex_hull_t *hull = jarvis_march(nPoints, coord);
+	// struct convex_hull_t *hull = graham_scan(nPoints, coord);
+	struct convex_hull_t *hull = chan_(nPoints, coord);
+	clock_t end = clock();
 	printf("Time = %f \n", (double) (end-start) / CLOCKS_PER_SEC);
 
 	printf("Convex Hull Algorithm --- END\n");

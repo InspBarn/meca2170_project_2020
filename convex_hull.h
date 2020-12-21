@@ -1,114 +1,85 @@
-#include "BOV.h"
-#include "inputs.h"
-
+#include "utils.h"
 #include <unistd.h>
-#include <time.h>
 
-struct convex_hull_t{
-	double time;
-	char *method;
-	int display;
+#define JARVIS_ANIMATION 0
 
-	int Start;
-	int nPoints;
-	float (*coord)[2];
-	GLsizei nPoints_GL;
-	bov_points_t *coordDraw;
-	GLfloat *colorDraw;
+#define GRAHAM_ANIMATION 0
 
-	int nHull;
-	int *hull_idxs;
-	GLsizei nHull_GL;
-	bov_order_t *hullDraw;
-};
+#define CHAN_PRESENTATION_ 0
+#define CHAN_ANIMATION 0
+#if CHAN_ANIMATION
+#define CHAN_PRESENTATION CHAN_PRESENTATION_
+#else
+#define CHAN_PRESENTATION 0
+#endif
 
+// Display Time Step Order for Animation
+#define TIME_STEP 5e4
 
-void convex_hull_init(struct convex_hull_t *myHull,
-					  int start,
-					  int stop,
-					  float coord[][2],
-					  int display);
+/* ----------------------------------------------
+	Return a convex_hull_t structure which compute the convex hull
+	of the 'nPoints' points set 'coord' according to the Jarvis
+	March Algorithm.
 
-void convex_hull_display_init(struct convex_hull_t *hull,
-							  int color);
-
-void convex_hull_update(struct convex_hull_t *hull,
-						const int *idxs,
-						int n);
-
-void convex_hull_partial_update(struct convex_hull_t *hull,
-								const int *idxs,
-								int start,
-								int count,
-								int newN);
-
-struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull,
-											   const float point[2]);
-
-void convex_hull_display(bov_window_t *window,
-						 struct convex_hull_t *hull);
-
-// void update_coordinates(struct convex_hull_t *myHull);
-
-/* Convex Hull Algorithms */
-int empty_hull(int nPoints, float coord[][2], int* hull_idxs);
-
+	Principle : We start from the leftest point. Then, taking the
+	next point if the list, we take the point for which the area
+	between them three is the smallest. We then go on while the
+	next point is not the leftest one.
+---------------------------------------------- */
 struct convex_hull_t* jarvis_march(int nPoints,
 								   float coord[][2]);
 
+/* ----------------------------------------------
+	Return a convex_hull_t structure which compute the convex hull
+	of the 'nPoints' points set 'coord' according to the Graham
+	Scan Algorithm.
+
+	Principle : We want to build 2 convex hulls which join the
+	leftest and the rightest points. The first convex hull is going
+	upward all the points in 'coord' while the second one is going
+	downward. In that respect, we sort all coordinates from the
+	leftest to the rightest and going through that sorted array. If
+	the hull we obtain by adding the current point then we have to
+	remove last points which are inside the final convex hull.
+---------------------------------------------- */
 struct convex_hull_t* graham_scan(int nPoints,
 								  float coord[][2]);
 
+/* ----------------------------------------------
+	Return a convex_hull_t structure which compute the convex hull
+	of the 'nPoints' points set 'coord' according to the Chan
+	Algorithm.
+
+	Principle : The set of 'nPoints' points is devided into several
+	convex_hull_t structures of 40 points. The convex hull of each
+	subsets is computed thanks to the Graham Scan Algorithm. Then
+	we perform a Jarvis March between all subsets convex hull to
+	compute the global convex hull.
+---------------------------------------------- */
 struct convex_hull_t* chan_(int nPoints,
 							float coord[][2]);
 
 void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *display, int end_of);
 
-// int graham_scan(int nPoints, float coord[][2], int* hull);
-
-float direction(float x1[2],float x2[2],float x3[2]);
-
-void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
-
-int max_dist(int* points, int size_points, float coord[][2], int I, int J);
-
-int min_dist(int* points, int size_points, float coord[][2], int I, int J);
-
-/* Useful Functions * /
-static void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list);
-static float direction(float x1[2],float x2[2],float x3[2]);
-int min_dist(int* points, float coord[][2], int I, int J);
-int* concat(int* V1, int* V2);
-//*/
 
 int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left);
 
 void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints);
 
-// Display Time order
-#define TIME_STEP 5e4
 
-// Display Characteristics
-#define POINTS_WIDTH 5e-3
-#define POINTS_OUTLINE_WIDTH 1e-4
+/* ----------------------------------------------
+	This function may be used at the very end of the algorithm. It plots
+	the set of points in xy coordinates as well as their convex hull.
 
-// Define Some Colors
-#define RGBMAX 255.0
-#define MAXCOLORS 15
-#define BLACK {0.0/RGBMAX, 0.0/RGBMAX, 0.0/RGBMAX, 1.0}
-#define MEDIUMVIOLETRED {199.0/RGBMAX, 21.0/RGBMAX, 133.0/RGBMAX, 1.0}
-#define FORESTGREEN {34.0/RGBMAX, 139.0/RGBMAX, 34.0/RGBMAX, 1.0}
-#define FIREBRICK {178.0/RGBMAX, 34.0/RGBMAX, 34.0/RGBMAX, 1.0}
-#define BLUE {0.0/RGBMAX, 0.0/RGBMAX, 255.0/RGBMAX, 1.0}
-#define DARKORANGE {255.0/RGBMAX, 99.0/RGBMAX, 71.0/RGBMAX, 1.0}
-#define DEEPPINK {255.0/RGBMAX, 20.0/RGBMAX, 147.0/RGBMAX, 1.0}
-#define CHARTREUSE {127.0/RGBMAX, 255.0/RGBMAX, 0.0/RGBMAX, 1.0}
-#define CRIMSON {220.0/RGBMAX, 20.0/RGBMAX, 60.0/RGBMAX, 1.0}
-#define DEEPSKYBLUE {0.0/RGBMAX, 191.0/RGBMAX, 255.0/RGBMAX, 1.0}
-#define GOLD {255.0/RGBMAX, 215.0/RGBMAX, 0.0/RGBMAX, 1.0}
-#define HOTPINK {255.0/RGBMAX, 105.0/RGBMAX, 180.0/RGBMAX, 1.0}
-#define MEDIUMSPRINGGREEN {0.0/RGBMAX, 250.0/RGBMAX, 154.0/RGBMAX, 1.0}
-#define INDIANRED {205.0/RGBMAX, 92.0/RGBMAX, 92.0/RGBMAX, 1.0}
-#define STEELBLUE {70.0/RGBMAX, 130.0/RGBMAX, 180.0/RGBMAX, 1.0}
-#define PINK {255.0/RGBMAX, 192.0/RGBMAX, 203.0/RGBMAX, 1.0}
-#define POINTS_OUTLINE_COLOR {0.0/RGBMAX,76.5/RGBMAX,30.6/RGBMAX, 0.25}
+	By using the left click of the mouse, you can add or remove points
+	following :
+		→ if the point is not in the set yet, then it is added to the set
+		of points and checked if it takes part to the new convex hull.
+		→ if it is part of the set but was not in its convex hull, then
+		we simply remove the point from the set.
+		→ if it is part of the set and its convex hull, then we remove
+		the point from the set and compute the new convex hull between
+		the points which are around the one that we remove.
+---------------------------------------------- */
+void convex_hull_display(bov_window_t *window, struct convex_hull_t *hull);
+struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const float point[2]);

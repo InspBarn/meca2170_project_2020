@@ -1,173 +1,5 @@
 #include "convex_hull.h"
 
-static float distance(const float x1[2], const float x2[2]) {
-	return sqrt(pow(x1[0]-x2[0],2.) + pow(x1[1]-x2[1],2.));
-}
-
-static int find(int nPoints, float coord[][2], const float point[2])
-{
-	float eps = 5e-3, dst;
-	for(int i=0; i<nPoints; i++)
-		if (distance(coord[i], point) < eps)
-			return i;
-	return -1;
-}
-
-static void delete(int nPoints, float coord[][2], int idx)
-{
-	for(int i=idx+1; i<nPoints; i++) {
-		coord[i-1][0] = coord[i][0];
-		coord[i-1][1] = coord[i][1];
-	}
-}
-
-static void insert(int nPoints, int *vec, int arg, int idx)
-{
-	int prev, next;
-	prev = arg;
-	for(int i=idx; i<nPoints; i++) {
-		next = vec[i];
-		vec[i] = prev;
-		prev = next;
-	}
-	vec[nPoints] = next;
-}
-
-static int argmin(int nPoints, float coord[][2], int axis)
-{
-	int argmin = 0;
-	float min = coord[0][axis];
-	for (int i=1; i<nPoints; i++) {
-		if (coord[i][axis]<min) {
-			argmin = i; min = coord[i][axis];
-		}
-	}
-	return argmin;
-}
-
-static int argmax(int nPoints, float coord[][2], int axis)
-{
-	int argmax = 0;
-	float max = coord[0][axis];
-	for (int i=1; i<nPoints; i++) {
-		if (coord[i][axis]>max) {
-			argmax = i; max = coord[i][axis];
-		}
-	}
-	return argmax;
-}
-
-struct sort
-{
-    float value;
-    int index;
-};
-int cmp(const void *a, const void *b)
-{
-    struct sort *a1 = (struct sort *)a;
-    struct sort *a2 = (struct sort *)b;
-    if ((*a1).value > (*a2).value)
-        return -1;
-    else if ((*a1).value < (*a2).value)
-        return 1;
-    else
-        return 0;
-}
-
-void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
-{
-	struct sort array[nPoints];
-    for (int i = 0; i < nPoints; i++)
-    {
-        array[i].value = coord[i][axis];
-        array[i].index = i;
-    }
-    //sort objects array according to value maybe using qsort
-    qsort(array, nPoints, sizeof(array[0]), cmp);
-    for (int i = 0; i < nPoints; i++){
-			argsorted_list[i] = array[i].index;
-		}
-
-
-	// argsorted_list[0] = 0;
-	// int i,j; float x;
-	// for(i=1; i<nPoints; i++) {
-	// 	x = coord[i][axis];
-	// 	for (j=i; j>0; j--) {
-	// 		if (x<coord[argsorted_list[j-1]][axis]) {
-	// 			argsorted_list[j] = argsorted_list[j-1];
-	// 		} else {break;}
-	// 	}
-	// 	argsorted_list[j] = i;
-	// }
-}
-
-static int argfind(int nPoints, int *vec, int idx)
-{
-	for(int i=0; i<nPoints; i++)
-		if(idx==vec[i])
-			return i;
-	return -1;
-}
-
-static void argshift(int nPoints, int *vec, int arg)
-{
-	for(int i=0; i<nPoints; i++)
-		if(vec[i]>arg)
-			vec[i] = vec[i]-1;
-}
-
-static void argdelete(int nPoints, int *vec, int arg)
-{
-	int passed = 0;
-	for(int i=0; i<nPoints; i++) {
-		if (passed)
-			vec[i-1] = vec[i];
-		if (!passed && (vec[i]==arg))
-			passed = 1;
-	}
-}
-
-int empty_hull(int nPoints, float coord[][2], int* hull_idxs)
-{
-	hull_idxs[0] = argmin(nPoints, coord, 0);
-	return 1;
-}
-
-/*
--------------------------------------------------
-Inputs :
-	x1,x2,x3  -- Coordinates of 3 points in the plane
-		axis 0 : x-direction
-		axis 1 : y-direction
-
-Output :
-	area      -- Area of the triangle between those 3 points
--------------------------------------------------
-*/
-float direction(float x1[2], float x2[2], float x3[2])
-{
-	float area = (x1[0]*x2[1] - x2[0]*x1[1]) \
-			   - (x1[0]*x3[1] - x3[0]*x1[1]) \
-			   + (x2[0]*x3[1] - x3[0]*x2[1]);
-	return area;
-}
-
-/*
-Jarvis March Algorithm
--------------------------------------------------
-Inputs :
-	nPoints   -- Amount of points in the coord vector
-	coord     -- Coordinates of points in the grid
-		axis 0 : x-direction
-		axis 1 : y-direction
-	indexHull -- Array of integer for indexing the points in the convex hull
-
-Output :
-	count     -- Amount of points in the convex Hull
--------------------------------------------------
-*/
-#define JARVIS_ANIMATION 0
 
 void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *display, int end_of)
 {
@@ -267,33 +99,6 @@ end_of_jarvis:
 	return result;
 }
 
-/*
-Graham's Scan Algorithm
-*/
-
-//input: x and y coo of 3 points
-//output: >0 if the 3 points turn left (counter-clock) in the 1-2-3 way, <0 otherwise
-// non robuste: return 0 if points are aligned
-// double turn_dir(float x1, float y1, float x2, float y2, float x3, float y3){
-// 	return (x1*(y2-y3) - x2*(y1-y3) + x3*(y1-y2));
-// }
-
-
-/*
-Graham's Scan Algorithm
--------------------------------------------------
-Inputs :
-	nPoints   -- Amount of points in the coord vector
-	coord     -- Coordinates of points in the grid
-		axis 0 : x-direction
-		axis 1 : y-direction
-	indexHull -- Array of integer for indexing the points in the convex hull
-
-Output :
-	count     -- Amount of points in the convex Hull
--------------------------------------------------
-*/
-#define GRAHAM_ANIMATION 0
 
 struct convex_hull_t* graham_scan(int nPoints, float coord[][2])
 {
@@ -586,31 +391,6 @@ void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull
 
 }
 
-/* ----------------------------------------------
-                  CHAN ALGORITHM
----------------------------------------------- */
-
-/*
-Chan's Algorithm
--------------------------------------------------
-Inputs :
-	nPoints   -- Amount of points in the coord vector
-	coord     -- Coordinates of points in the grid
-		axis 0 : x-direction
-		axis 1 : y-direction
-	indexHull -- Array of integer for indexing the points in the convex hull
-
-Output :
-	count     -- Amount of points in the convex Hull
--------------------------------------------------
-*/
-#define CHAN_PRESENTATION_ 0
-#define CHAN_ANIMATION 0
-#if CHAN_ANIMATION
-#define CHAN_PRESENTATION CHAN_PRESENTATION_
-#else
-#define CHAN_PRESENTATION 0
-#endif
 
 struct convex_hull_t* chan_(int nPoints, float coord[][2])
 {
@@ -805,95 +585,6 @@ end_of_march:
 	return result;
 }
 
-void convex_hull_init(struct convex_hull_t *myHull, int start, int stop, float coord[][2], int display)
-{
-	myHull->display = display;
-	myHull->Start = start;
-	myHull->nPoints = stop-start;
-
-	myHull->coord = (float(*)[2])malloc(sizeof(myHull->coord[0])*myHull->nPoints);
-	myHull->hull_idxs = (int*)malloc(sizeof(int)*myHull->nPoints);
-
-	for(int i=0; i<myHull->nPoints; i++) {
-		myHull->coord[i][0] = coord[start+i][0];
-		myHull->coord[i][1] = coord[start+i][1];
-	}
-	myHull->nHull = 1;
-	myHull->hull_idxs[0] = 0;
-	// myHull->nHull = hull_function(myHull->nPoints, myHull->coord, myHull->hull_idxs);
-
-	if (display)
-		convex_hull_display_init(myHull, -1);
-}
-
-void convex_hull_display_init(struct convex_hull_t *hull, int color)
-{
-	hull->nPoints_GL = (GLsizei) hull->nPoints;
-	hull->nHull_GL = (GLsizei) hull->nHull;
-	if (color==-1) {
-		hull->coordDraw = bov_points_new((GLfloat (*)[2]) hull->coord, hull->nPoints_GL, GL_DYNAMIC_DRAW);
-		hull->hullDraw = bov_order_new((GLuint*) hull->hull_idxs, hull->nHull_GL, GL_DYNAMIC_DRAW);
-	} else {
-		hull->coordDraw = bov_points_new((GLfloat (*)[2]) hull->coord, hull->nPoints_GL, GL_STATIC_DRAW);
-		hull->hullDraw = bov_order_new((GLuint*) hull->hull_idxs, hull->nHull_GL, GL_STATIC_DRAW);
-	}
-
-	GLfloat colorDraw[4];
-	colorDraw[3] = (GLfloat) 1.0;
-	if (color==-1) { hull->colorDraw = (GLfloat[4]) BLACK; }
-	else if (color==0) { hull->colorDraw = (GLfloat[4]) MEDIUMVIOLETRED; }
-	else if (color==1) { hull->colorDraw = (GLfloat[4]) FORESTGREEN; }
-	else if (color==2) { hull->colorDraw = (GLfloat[4]) FIREBRICK; }
-	else if (color==3) { hull->colorDraw = (GLfloat[4]) BLUE; }
-	else if (color==4) { hull->colorDraw = (GLfloat[4]) DARKORANGE; }
-	else if (color==5) { hull->colorDraw = (GLfloat[4]) DEEPPINK; }
-	else if (color==6) { hull->colorDraw = (GLfloat[4]) CHARTREUSE; }
-	else if (color==7) { hull->colorDraw = (GLfloat[4]) CRIMSON; }
-	else if (color==8) { hull->colorDraw = (GLfloat[4]) DEEPSKYBLUE; }
-	else if (color==9) { hull->colorDraw = (GLfloat[4]) GOLD; }
-	else if (color==10) { hull->colorDraw = (GLfloat[4]) HOTPINK; }
-	else if (color==11) { hull->colorDraw = (GLfloat[4]) MEDIUMSPRINGGREEN; }
-	else if (color==12) { hull->colorDraw = (GLfloat[4]) INDIANRED; }
-	else if (color==13) { hull->colorDraw = (GLfloat[4]) STEELBLUE; }
-	else if (color==14) { hull->colorDraw = (GLfloat[4]) PINK; }
-
-	bov_points_set_color(hull->coordDraw, hull->colorDraw);
-	bov_points_set_outline_color(hull->coordDraw, (GLfloat[4]) POINTS_OUTLINE_COLOR);
-	bov_points_set_width(hull->coordDraw, POINTS_WIDTH);
-	bov_points_set_outline_width(hull->coordDraw, POINTS_OUTLINE_WIDTH);
-	// bov_points_set_outline_width(hull->coordDraw, -1.0);
-}
-
-void convex_hull_update(struct convex_hull_t *hull, const int *idxs, int n)
-{
-	hull->nHull = n;
-	for (int i=0; i<n; i++)
-		hull->hull_idxs[i] = idxs[i];
-
-	if (hull->display) {
-		hull->nHull_GL = (GLsizei) n;
-		hull->hullDraw = bov_order_update(hull->hullDraw,
-											(GLuint*) idxs,
-											(GLsizei) n);
-	}
-}
-
-void convex_hull_partial_update(struct convex_hull_t *hull, const int *idxs, int start, int count, int newN)
-{
-	hull->nHull = newN;
-	for (int i=start; i<start+count; i++)
-		hull->hull_idxs[i] = idxs[i-start];
-
-	if (hull->display) {
-		hull->nHull_GL = (GLsizei) newN;
-		hull->hullDraw = bov_order_partial_update(hull->hullDraw,
-													(GLuint*) idxs,
-													(GLint) start,
-													(GLsizei) count,
-													(GLsizei) newN);
-	}
-}
-
 struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const float point[2])
 {
 	struct convex_hull_t *hull_new = malloc(sizeof(struct convex_hull_t));
@@ -916,7 +607,6 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 
 		convex_hull_init(hull_new, 0, nPoints, coord, 1);
 
-		/*
 		nPoints = hull->nHull+1;
 		int *hull_idxs = calloc(nPoints, sizeof(int));
 		coord[0][0] = point[0]; coord[0][1] = point[1];
@@ -925,18 +615,18 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 			coord[i+1][1] = hull->coord[hull->hull_idxs[i]][1];
 		}
 
-		hull_new->nHull = graham_scan(nPoints, coord, hull_idxs);
+		struct convex_hull_t *hull_intermediate = graham_scan(nPoints, coord);
+		hull_new->nHull = hull_intermediate->nHull;
 		for (int i=0; i<hull_new->nHull; i++) {
-			if (hull_idxs[i]==0)
+			if (hull_intermediate->hull_idxs[i]==0)
 				hull_new->hull_idxs[i] = hull_new->nPoints-1;
 			else
-				hull_new->hull_idxs[i] = hull->hull_idxs[hull_idxs[i]-1];
+				hull_new->hull_idxs[i] = hull->hull_idxs[hull_intermediate->hull_idxs[i]-1];
 		}
 		hull_new->nHull_GL = (GLsizei) hull_new->nHull;
 		hull_new->hullDraw = bov_order_update(hull_new->hullDraw,
-											(GLuint*) hull_new->hull_idxs,
-											(GLsizei) hull_new->nHull_GL);
-		*/
+											  (GLuint*) hull_new->hull_idxs,
+											  (GLsizei) hull_new->nHull_GL);
 	} else {
 		/* The considered 'point' is in my set 'coord'
 			→ Was it part of the convex hull ?
