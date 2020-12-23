@@ -2,6 +2,9 @@
 #include "convex_hull.h"
 #include <time.h>
 
+// #include <unistd.h>
+#include <stdio.h>
+#include<stdlib.h>
 
 int main()
 {
@@ -13,13 +16,44 @@ int main()
 	// we print the seed so you can get the distribution of points back
 	printf("seed=%d\n", seed);
 
-	const int nPoints = 1000000;
+#if 1 // put 1 for random polygon
+	// char buff[1000];
+	// getcwd( buff, 1000 );
+	// printf("Current working dir: %s\n", buff);
+
+	FILE *file;
+	if ((file = fopen("../src/polar_bear.txt", "r"))==NULL) {
+		perror("Error while opening the file 'polar_bear.txt'");
+		return EXIT_FAILURE;
+	}
+
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+
+	const int nPoints = 18*40;
 	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
-#if 0 // put 1 for random polygon
-	random_polygon(coord, nPoints, 4);
+	int counter = 0;
+	char *point = NULL;
+
+	while ((read = getline(&line, &len, file)) != -1) {
+		point = strtok(line, ",");
+		coord[counter][0] = strtod(point, NULL);
+		point = strtok(NULL, ",");
+		coord[counter][1] = strtod(point, NULL);
+		counter ++;
+	}
+
+	fclose(file);
+	if(line)
+		free(line);
+
+	struct convex_hull_t *hull = chan_(nPoints, coord, 1);
+
 #else
+	const int nPoints = 50;
+	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
 	random_points(coord, nPoints);
-#endif
 
 	/*
 	int *indexHull = malloc(sizeof(int)*nPoints);
@@ -113,24 +147,23 @@ int main()
 
 	printf("Convex Hull Algorithm --- BEGIN\n");
 
-	//struct convex_hull_t *hull = jarvis_march(nPoints, coord, 1);
-	struct convex_hull_t *hull = graham_scan(nPoints, coord, 1);
-	//struct convex_hull_t *hull = chan_(nPoints, coord, 1);
-	//struct convex_hull_t *hull = quickhull(nPoints, coord, 1);
+	// struct convex_hull_t *hull = jarvis_march(nPoints, coord, 1);
+	// struct convex_hull_t *hull = graham_scan(nPoints, coord, 1);
+	// struct convex_hull_t *hull = chan_(nPoints, coord, 1);
+	struct convex_hull_t *hull = quickhull(nPoints, coord, 1);
 
 	printf("Convex Hull Algorithm --- END\n");
 	printf("   →  Method : %s\n", hull->method);
 	printf("   →  Number of points on the grid : N = %d\n", hull->nPoints);
 	printf("   →  Number of points in the hull : N = %d\n", hull->nHull);
 	printf("   →  Time needed for computations : t = %.3e [s]\n", hull->time);
-
+#endif
 	bov_window_t* window = bov_window_new(800, 800, "Convex Hull Algorithm");
 	bov_window_set_color(window, (GLfloat[]){0.9f, 0.85f, 0.8f, 1.0f});
 	convex_hull_display(window, hull);
+	bov_window_delete(window);
 
 	free(coord);
-	// free(hull);
-	bov_window_delete(window);
 
 	return EXIT_SUCCESS;
 }
