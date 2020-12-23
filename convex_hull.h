@@ -1,11 +1,11 @@
 #include "utils.h"
 #include <unistd.h>
 
-#define JARVIS_ANIMATION 0
+#define JARVIS_ANIMATION 1
 
 #define GRAHAM_ANIMATION 0
 
-#define CHAN_ANIMATION 0
+#define CHAN_ANIMATION 1
 #define CHAN_PRESENTATION_ 0
 
 // Display Time Step Order for Animation
