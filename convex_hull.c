@@ -158,7 +158,7 @@ struct convex_hull_t* graham_scan(int nPoints, float coord[][2], int display)
 
 		/* Step 3.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
-		while( flag &&  drct>=0){
+		while( flag &&  drct>=-0.00001){
 			/* DELETE the middle point */
 			hull_idxs[tracker-2] = hull_idxs[tracker-1];
 			hull_idxs[tracker-1] = 0;
@@ -217,7 +217,7 @@ struct convex_hull_t* graham_scan(int nPoints, float coord[][2], int display)
 
 		/* Step 5.2 : WHILE sizeof(upper_list) > 2
 			&& 3 last points make a LEFT turn */
-		while(flag && drct >=0){
+		while(flag && drct >=-0.00001){
 			// DELETE the middle point
 			hull_idxs[tracker-2] = hull_idxs[tracker-1];
 			hull_idxs[tracker-1] = 0;
@@ -512,11 +512,11 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 			result->display = 0;
 			bov_points_delete(result->coordDraw);
 			bov_order_delete(result->hullDraw);
-			bov_window_delete(window);
 		}
 
 
 	#endif
+	bov_window_delete(window);
 	free(anim_Hull);
 	free(anim_Hull_second);
 	return result;
@@ -854,6 +854,50 @@ struct convex_hull_t* convex_hull_click_update(struct convex_hull_t *hull, const
 				→ Delete it from hull_idxs
 				→ Does the hull need to be changed ?
 			*/
+
+			struct convex_hull_t *hull_recomp = chan_(nPoints, coord, 0);
+			hull->hull_idxs = hull_recomp->hull_idxs;
+			hull->nHull = hull_recomp->nHull;
+			// quickhull with the 2 POINTS
+			// float (*hullcoord)[2] = calloc(hull->nHull, sizeof(coord[0]));
+			// for(int i=0; i< hull->nHull; i++){
+			// 	hullcoord[i][0] = hull->coord[hull->hull_idxs[i]][0];
+			// 	hullcoord[i][1] = hull->coord[hull->hull_idxs[i]][1];
+			// }
+			// int min = argmin(hull->nHull, hullcoord, 1);
+			// int max = argmax(hull->nHull, hullcoord, 1);
+			//
+			// if(direction(hullcoord[min], hullcoord[max], point)<0){
+			// 	int V1 = hull_idxs[idh+1];
+			// 	int V2 = hull_idxs[idh-1];
+			// 	int* S = calloc(hull->nPoints, sizeof(int));
+			// 	int size_S = 0;
+			// 	for(int j = 0; j < hull->nPoints; j++){
+			// 		if(direction(hull->coord[V1], hull->coord[V2], hull->coord[j])<0){
+			// 			S[size_S] = j;
+			// 			size_S++;
+			// 		}
+			// 	}
+			//
+			// 	bov_window_t* window;
+			// 	struct convex_hull_t* anim_hull;
+			// 	int* return_hull = calloc(hull->nPoints, sizeof(int));
+			// 	int n_add_hull = quick_hull_rec(S, size_S, V2, V1, coord, return_hull, 0, anim_hull, window);
+			// 	printf("idh = %d, n_add_hull = %d \n", idh, n_add_hull);
+			// 	for(int k = hull->nHull-1; k>=idh+n_add_hull; k--){
+			// 		printf("%d, ", k-n_add_hull);
+			// 		hull->hull_idxs[k] = hull->hull_idxs[k-n_add_hull];
+			// 	}
+			// 	printf("HERE \n");
+			// 	for(int k=idh; k<idh+n_add_hull; k++){
+			// 		hull->hull_idxs[k] = return_hull[k-idh];
+			// 	}
+			// 	hull->nHull = hull->nHull + n_add_hull;
+			//
+			// } else {
+			//
+			// }
+
 		}
 
 		convex_hull_update(hull_new, hull->hull_idxs, hull->nHull);
