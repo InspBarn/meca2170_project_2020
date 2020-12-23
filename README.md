@@ -20,3 +20,5 @@ You may want to display the animation of the hull being constructed but you may 
   
 For displaying, initialize them to 1 in convex-hull.h. But if you don't want to display, set them back to 0.
 A last function is used to show the set of points and its final convex hull. The classical commands of the "BOV.h" library are working but you can add or remove points to set by clicking the right button of the mouse. The new convex hull will be automatically recomputed.
+
+Originally the code will show you the chan implementation for a special case. You can change that by putting a 0 at line 18 of main.c in place of the 1 and the choose the algorithm you want
