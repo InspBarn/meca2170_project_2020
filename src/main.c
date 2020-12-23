@@ -23,7 +23,7 @@ int main()
 	// printf("Current working dir: %s\n", buff);
 
 	FILE *file;
-	if ((file = fopen("../src/polar_bear.txt", "r"))==NULL) {
+	if ((file = fopen("../pylib/polar_bear.txt", "r"))==NULL) {
 		perror("Error while opening the file 'polar_bear.txt'");
 		return EXIT_FAILURE;
 	}
