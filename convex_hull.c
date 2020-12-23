@@ -265,7 +265,7 @@ struct convex_hull_t* graham_scan(int nPoints, float coord[][2], int display)
 
 // DIVIDE AND CONQUER (FOR SPARTA)
 
-
+//function concat: take two array and merge it into one
 int* concat(int* V1, int* V2){
 	int length_V1 = sizeof(V1) / sizeof(V1[0]);
 	int length_V2 = sizeof(V2) / sizeof(V2[0]);
@@ -280,7 +280,7 @@ int* concat(int* V1, int* V2){
 	printf("length = %d \n", length_V1 + length_V2);
 	return concat_V;
 }
-
+// max_dist : compute the point the fartest to the left
 int max_dist(int* points, int size_points, float coord[][2], int I, int J){
 	double max_dist=-10000; float dist;
 	int max_point = -1;
@@ -294,7 +294,7 @@ int max_dist(int* points, int size_points, float coord[][2], int I, int J){
 	}
 	return max_point;
 }
-
+// min_dist : compute the point the fartest to the right
 int min_dist(int* points, int size_points, float coord[][2], int I, int J){
 	double min_dist=10000; float dist;
 	int min_point = -1;
@@ -309,6 +309,7 @@ int min_dist(int* points, int size_points, float coord[][2], int I, int J){
 	return min_point;
 }
 
+//quick_hull_anim: function used for the animation
 void quick_hull_anim(bov_window_t *window, struct convex_hull_t *hull, int* actual_hull, int actual_size)
 {
 
@@ -324,16 +325,23 @@ void quick_hull_anim(bov_window_t *window, struct convex_hull_t *hull, int* actu
 	sleep(1);
 }
 
+// recursive function of quickhull
 int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left, struct convex_hull_t* anim_hull, bov_window_t* window){
+	//init
 	int* I = calloc(size_S, sizeof(int));
 	int* J = calloc(size_S, sizeof(int));
 	int* tab = calloc(2, sizeof(int));
 	int size_I = 0; int size_J = 0; int V=0;
+
+	//if there is no more point outside the actual hull in the part delemeted by V_i and V_j
 	if(size_S==0){
 		return_hull[0] = V_i; return_hull[1] = V_j;
 		return 2;
-	}else if(flag_left==1){
+	}
+	else if(flag_left==1){ //if there is still "outsiders" and if we are computing the left part of the hull
+		//compute the point the farthest from line V_i V_j
 		V = max_dist(S, size_S, coord, V_i, V_j);
+		//compute wich point are still not in the hull and divde it in left and right part
 		for(int i=0; i< size_S; i++){
 			if(direction(coord[V_i], coord[V],coord[S[i]]) > 0){
 				I[size_I] = S[i];
@@ -352,9 +360,11 @@ int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* 
 		int* V1 = calloc(size_I+2, sizeof(int));
 		int* V2 = calloc(size_J+2, sizeof(int));
 
+		//recursive call of the function
 		int length_V1 = quick_hull_rec(I, size_I, V_i, V, coord, V1, 1, anim_hull, window);
 		int length_V2 = quick_hull_rec(J, size_J, V, V_j, coord, V2, 1, anim_hull, window);
 
+		//assemble the two hull returned
 		for(int i=0; i<length_V1; i++){
 			return_hull[i] = V1[i];
 		}
@@ -362,8 +372,10 @@ int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* 
 			return_hull[length_V1+j] = V2[j];
 		}
 		return length_V1+length_V2;
-	}else{
+	}else{ //if there is still "outsiders" and if we are computing the right part of the hull
+		//compute the point the farthest from line V_i V_j
 		V = min_dist(S, size_S, coord, V_i, V_j);
+		//compute wich point are still not in the hull and divde it in left and right part
 		for(int i=0; i< size_S; i++){
 			if(direction(coord[V_i], coord[V],coord[S[i]]) < 0){
 				I[size_I] = S[i];
@@ -382,9 +394,11 @@ int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* 
 		int* V1 = calloc(size_I+2, sizeof(int));
 		int* V2 = calloc(size_J+2, sizeof(int));
 
+		//recursive call of the function
 		int length_V1 = quick_hull_rec(I, size_I, V_i, V, coord, V1, 0, anim_hull, window);
 		int length_V2 = quick_hull_rec(J, size_J, V, V_j, coord, V2, 0, anim_hull, window);
 
+		//assemble the two hull returned
 		for(int i=0; i<length_V1; i++){
 			return_hull[i] = V1[i];
 		}
@@ -395,9 +409,9 @@ int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* 
 	}
 }
 
-//INIT quickhull
+// function quichull: init the algorithm by dividing in two the points and make the first call to the recursive function
 struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
-
+	//init
 	bov_window_t* window;
 	if (display) {
 		window = bov_window_new(800, 800, "Quick Hull Algorithm");
@@ -417,9 +431,9 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 	int* S_right = calloc(nPoints, sizeof(int));
 	int left_tracker = 0; int right_tracker = 0;
 
-
+  //sort the points in function of y
 	argsort(nPoints, coord, 1, S);
-
+	// divide the points in two part S_left and S_right
 	for(int i=1; i<nPoints-1; i++){
 		if(direction(coord[S[0]], coord[S[nPoints-1]], coord[S[i]])>0){
 			S_left[left_tracker] = S[i];
@@ -441,10 +455,11 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 		anim_Hull_second->hull_idxs[0] = S[0]; anim_Hull_second->hull_idxs[1] = S[nPoints-1];
 		anim_Hull_second->nHull = 2;
 	#endif
-
+	//call the recursive function on each part
 	int nHull = quick_hull_rec(S_left, left_tracker, S[0], S[nPoints-1], coord, indexHull, 1, anim_Hull, window);
 	int nHullSecond = quick_hull_rec(S_right, right_tracker, S[0], S[nPoints-1], coord, indexHullSecond, 0, anim_Hull_second, window);
 
+	//merge the Hull
 	int precedent = -1;
 	int* indexHullTotal = calloc(nHull+nHullSecond, sizeof(int));
 	int hull_tracker = 0;
@@ -468,8 +483,11 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 		coordHull[i][0] = coord[indexHullTotal[i]][0];
 		coordHull[i][1] = coord[indexHullTotal[i]][1];
 	}
+	//update the hull
 	convex_hull_update(result, indexHullTotal, hull_tracker);
 
+	//the animation is done after all the computations with anim_hull who keep track of
+	// the order in which the hull is compute and indexHullTotal who is the real hull
 	#if QUICKHULL_ANIMATION
 
 	int* currentHull = calloc(hull_tracker, sizeof(int));
@@ -477,7 +495,7 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 	int* indexs = calloc(hull_tracker, sizeof(int));
 	int* anim_hull_total = calloc(hull_tracker, sizeof(int));
 	int size_current = hull_tracker; int size_indexs=0;
-
+	//merge the two array
 	for(int m=0; m<anim_Hull_second->nHull; m++){
 		anim_hull_total[m] = anim_Hull_second->hull_idxs[m];
 	}
@@ -485,7 +503,8 @@ struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
 		anim_hull_total[m+anim_Hull_second->nHull-2] = anim_Hull->hull_idxs[m];
 	}
 
-
+	//loop on the steps, take the anim_hull from 0 to i and look for each element of
+	// currentHull if it is an element of anim_hull. if yes we keep it, if not we pop it out.
 	for(int i=1; i<anim_Hull_second->nHull + anim_Hull->nHull-1; i++){
 		size_indexs = 0;
 		for(int p=0; p<hull_tracker; p++){

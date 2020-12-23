@@ -1,9 +1,11 @@
 #include "utils.h"
 
+// compute the distance between two points
 float distance(const float x1[2], const float x2[2]) {
 	return sqrt(pow(x1[0]-x2[0],2.) + pow(x1[1]-x2[1],2.));
 }
 
+//insert a point in an array
 void insert(int nPoints, int *vec, int arg, int idx)
 {
 	int prev, next;
@@ -16,6 +18,7 @@ void insert(int nPoints, int *vec, int arg, int idx)
 	vec[nPoints] = next;
 }
 
+//find a point in an array
 int find(int nPoints, float coord[][2], const float point[2])
 {
 	float eps = 5e-3, dst;
@@ -25,6 +28,7 @@ int find(int nPoints, float coord[][2], const float point[2])
 	return -1;
 }
 
+//find minimum of array and return the index
 int argmin(int nPoints, float coord[][2], int axis)
 {
 	int argmin = 0;
@@ -37,6 +41,7 @@ int argmin(int nPoints, float coord[][2], int axis)
 	return argmin;
 }
 
+//find maxmum of array and return the index
 int argmax(int nPoints, float coord[][2], int axis)
 {
 	int argmax = 0;
@@ -49,6 +54,7 @@ int argmax(int nPoints, float coord[][2], int axis)
 	return argmax;
 }
 
+//sort an array (with qsort) and return the indexs
 void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 {
 	struct sort array[nPoints];
@@ -74,7 +80,7 @@ void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 		}
 	*/
 }
-
+//find a point in an array and return the index
 int argfind(int nPoints, int *vec, int idx)
 {
 	for(int i=0; i<nPoints; i++){
@@ -85,6 +91,7 @@ int argfind(int nPoints, int *vec, int idx)
 	return -1;
 }
 
+//compute the area of a triangle -> used to determin if you turn clockwise or anti-clockwise
 double direction(float x1[2], float x2[2], float x3[2])
 {
 	double area = (x1[0]*x2[1] - x2[0]*x1[1]) \
@@ -93,6 +100,7 @@ double direction(float x1[2], float x2[2], float x3[2])
 	return area;
 }
 
+//comparaison function used by argsort
 int cmp(const void *a, const void *b)
 {
     struct sort *a1 = (struct sort *)a;
