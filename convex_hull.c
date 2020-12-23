@@ -309,7 +309,22 @@ int min_dist(int* points, int size_points, float coord[][2], int I, int J){
 	return min_point;
 }
 
-int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left){
+void quick_hull_anim(bov_window_t *window, struct convex_hull_t *hull, int* actual_hull, int actual_size)
+{
+
+	hull->nHull_GL = (GLsizei) hull->nHull;
+	bov_order_t* hullDraw = bov_order_update(hull->hullDraw,
+										(GLuint*) actual_hull,
+										(GLsizei) actual_size);
+	bov_points_set_color(hull->coordDraw, (GLfloat[4]) BLACK);
+	bov_points_draw(window, hull->coordDraw, 0, hull->nPoints_GL);
+	bov_points_set_color(hull->coordDraw, (GLfloat[4]) CHARTREUSE);
+	bov_line_loop_draw_with_order(window, hull->coordDraw, hullDraw, 0, actual_size);
+	bov_window_update(window);
+	sleep(1);
+}
+
+int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left, struct convex_hull_t* anim_hull, bov_window_t* window){
 	int* I = calloc(size_S, sizeof(int));
 	int* J = calloc(size_S, sizeof(int));
 	int* tab = calloc(2, sizeof(int));
@@ -329,11 +344,16 @@ int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* retu
 			}
 		}
 
+		#if QUICKHULL_ANIMATION
+			anim_hull->hull_idxs[anim_hull->nHull] = V;
+			anim_hull->nHull++;
+		#endif
+
 		int* V1 = calloc(size_I+2, sizeof(int));
 		int* V2 = calloc(size_J+2, sizeof(int));
 
-		int length_V1 = quick_hull(I, size_I, V_i, V, coord, V1, 1);
-		int length_V2 = quick_hull(J, size_J, V, V_j, coord, V2, 1);
+		int length_V1 = quick_hull_rec(I, size_I, V_i, V, coord, V1, 1, anim_hull, window);
+		int length_V2 = quick_hull_rec(J, size_J, V, V_j, coord, V2, 1, anim_hull, window);
 
 		for(int i=0; i<length_V1; i++){
 			return_hull[i] = V1[i];
@@ -353,11 +373,17 @@ int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* retu
 				size_J++;
 			}
 		}
+
+		#if QUICKHULL_ANIMATION
+			anim_hull->hull_idxs[anim_hull->nHull] = V;
+			anim_hull->nHull++;
+		#endif
+
 		int* V1 = calloc(size_I+2, sizeof(int));
 		int* V2 = calloc(size_J+2, sizeof(int));
 
-		int length_V1 = quick_hull(I, size_I, V_i, V, coord, V1, 0);
-		int length_V2 = quick_hull(J, size_J, V, V_j, coord, V2, 0);
+		int length_V1 = quick_hull_rec(I, size_I, V_i, V, coord, V1, 0, anim_hull, window);
+		int length_V2 = quick_hull_rec(J, size_J, V, V_j, coord, V2, 0, anim_hull, window);
 
 		for(int i=0; i<length_V1; i++){
 			return_hull[i] = V1[i];
@@ -367,6 +393,133 @@ int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* retu
 		}
 		return length_V1+length_V2;
 	}
+}
+
+//INIT quickhull
+struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display){
+
+	bov_window_t* window;
+	if (display) {
+		window = bov_window_new(800, 800, "Quick Hull Algorithm");
+		bov_window_set_color(window, (GLfloat[]){0.9f, 0.85f, 0.8f, 1.0f});
+	}
+	struct convex_hull_t* result = malloc(sizeof(struct convex_hull_t));
+	convex_hull_init(result, 0, nPoints, coord, QUICKHULL_ANIMATION);
+
+	result->method = "QuickHull";
+	result->time = 0;
+
+	int *indexHull = malloc(sizeof(int)*nPoints);
+	int *indexHullSecond = malloc(sizeof(int)*nPoints);
+
+	int* S = calloc(nPoints, sizeof(int));
+	int* S_left = calloc(nPoints, sizeof(int));
+	int* S_right = calloc(nPoints, sizeof(int));
+	int left_tracker = 0; int right_tracker = 0;
+
+
+	argsort(nPoints, coord, 1, S);
+
+	for(int i=1; i<nPoints-1; i++){
+		if(direction(coord[S[0]], coord[S[nPoints-1]], coord[S[i]])>0){
+			S_left[left_tracker] = S[i];
+			left_tracker++;
+		} else {
+			S_right[right_tracker] = S[i];
+			right_tracker++;
+		}
+	}
+
+	struct convex_hull_t *anim_Hull = malloc(sizeof(struct convex_hull_t));
+	struct convex_hull_t *anim_Hull_second = malloc(sizeof(struct convex_hull_t));
+
+	#if QUICKHULL_ANIMATION
+		convex_hull_init(anim_Hull, 0, nPoints, coord, QUICKHULL_ANIMATION);
+		convex_hull_init(anim_Hull_second, 0, nPoints, coord, QUICKHULL_ANIMATION);
+		anim_Hull->hull_idxs[0] = S[0]; anim_Hull->hull_idxs[1] = S[nPoints-1];
+		anim_Hull->nHull = 2;
+		anim_Hull_second->hull_idxs[0] = S[0]; anim_Hull_second->hull_idxs[1] = S[nPoints-1];
+		anim_Hull_second->nHull = 2;
+	#endif
+
+	int nHull = quick_hull_rec(S_left, left_tracker, S[0], S[nPoints-1], coord, indexHull, 1, anim_Hull, window);
+	int nHullSecond = quick_hull_rec(S_right, right_tracker, S[0], S[nPoints-1], coord, indexHullSecond, 0, anim_Hull_second, window);
+
+	int precedent = -1;
+	int* indexHullTotal = calloc(nHull+nHullSecond, sizeof(int));
+	int hull_tracker = 0;
+	for (int i=0; i<nHull-1; i++) {
+		if(indexHull[i]!=precedent){
+			indexHullTotal[hull_tracker] = indexHull[i];
+			hull_tracker++;
+		}
+		precedent = indexHull[i];
+	}
+	for (int i=nHullSecond-1; i>0; i--) {
+		if(indexHullSecond[i]!=precedent){
+			indexHullTotal[hull_tracker] = indexHullSecond[i];
+			hull_tracker++;
+		}
+		precedent = indexHullSecond[i];
+	}
+
+	float (*coordHull)[2] = malloc(sizeof(coordHull[0])*(hull_tracker));
+	for (int i=0; i<hull_tracker; i++) {
+		coordHull[i][0] = coord[indexHullTotal[i]][0];
+		coordHull[i][1] = coord[indexHullTotal[i]][1];
+	}
+	convex_hull_update(result, indexHullTotal, hull_tracker);
+
+	#if QUICKHULL_ANIMATION
+
+	int* currentHull = calloc(hull_tracker, sizeof(int));
+	int* temporelHull = calloc(hull_tracker, sizeof(int));
+	int* indexs = calloc(hull_tracker, sizeof(int));
+	int* anim_hull_total = calloc(hull_tracker, sizeof(int));
+	int size_current = hull_tracker; int size_indexs=0;
+
+	for(int m=0; m<anim_Hull_second->nHull; m++){
+		anim_hull_total[m] = anim_Hull_second->hull_idxs[m];
+	}
+	for(int m=2; m<anim_Hull->nHull; m++){
+		anim_hull_total[m+anim_Hull_second->nHull-2] = anim_Hull->hull_idxs[m];
+	}
+
+
+	for(int i=1; i<anim_Hull_second->nHull + anim_Hull->nHull-1; i++){
+		size_indexs = 0;
+		for(int p=0; p<hull_tracker; p++){
+			currentHull[p] = indexHullTotal[p];
+			size_current = hull_tracker;
+		}
+		for(int z = 0; z <i; z++){
+			temporelHull[z] = anim_hull_total[z];
+		}
+		for(int j=0; j < hull_tracker; j++){
+			int find = argfind(i, temporelHull, indexHullTotal[j]);
+			if(find != -1){
+				indexs[size_indexs] = argfind(hull_tracker, indexHullTotal, temporelHull[find]);
+				size_indexs++;
+			}
+		}
+		for(int z = 0; z <size_indexs; z++){
+			currentHull[z] = indexHullTotal[indexs[z]];
+		}
+
+		quick_hull_anim(window, anim_Hull_second, currentHull, i);
+	}
+		if (display) {
+			result->display = 0;
+			bov_points_delete(result->coordDraw);
+			bov_order_delete(result->hullDraw);
+			bov_window_delete(window);
+		}
+
+
+	#endif
+	free(anim_Hull);
+	free(anim_Hull_second);
+	return result;
 }
 
 // PLOT

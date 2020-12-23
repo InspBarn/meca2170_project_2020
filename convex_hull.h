@@ -1,9 +1,11 @@
 #include "utils.h"
 #include <unistd.h>
 
-#define JARVIS_ANIMATION 0
+#define JARVIS_ANIMATION 1
 
 #define GRAHAM_ANIMATION 0
+
+#define QUICKHULL_ANIMATION 0
 
 #define CHAN_ANIMATION 0
 #define CHAN_PRESENTATION_ 0
@@ -66,8 +68,11 @@ struct convex_hull_t* chan_(int nPoints,
 
 void jarvis_march_anim(bov_window_t *window, struct convex_hull_t *hull, int end_of);
 
+int quick_hull_rec(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left, struct convex_hull_t* anim_hull, bov_window_t* window);
 
-int quick_hull(int* S, int size_S, int V_i, int V_j, float coord[][2], int* return_hull, int flag_left);
+void quick_hull_anim(bov_window_t *window, struct convex_hull_t *hull, int* actual_hull, int actual_size);
+
+struct convex_hull_t* quickhull(int nPoints, float coord[][2], int display);
 
 void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull, int nPoints);
 

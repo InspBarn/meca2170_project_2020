@@ -77,9 +77,11 @@ void argsort(int nPoints, float coord[][2], int axis, int* argsorted_list)
 
 int argfind(int nPoints, int *vec, int idx)
 {
-	for(int i=0; i<nPoints; i++)
-		if(idx==vec[i])
+	for(int i=0; i<nPoints; i++){
+		if(idx==vec[i]){
 			return i;
+		}
+	}
 	return -1;
 }
 
@@ -123,12 +125,15 @@ void convex_hull_init(struct convex_hull_t *hull, int start, int stop, float coo
 		hull->coord[i][0] = coord[start+i][0];
 		hull->coord[i][1] = coord[start+i][1];
 	}
+
 	hull->nHull = 1;
 	hull->hull_idxs[0] = 0;
 	// hull->nHull = hull_function(hull->nPoints, hull->coord, hull->hull_idxs);
 
-	if (display)
+	if (display){
 		convex_hull_display_init(hull, -1);
+	}
+
 }
 
 void convex_hull_display_init(struct convex_hull_t *hull, int color)
@@ -138,6 +143,7 @@ void convex_hull_display_init(struct convex_hull_t *hull, int color)
 	if (color==-1) {
 		hull->coordDraw = bov_points_new((GLfloat (*)[2]) hull->coord, hull->nPoints_GL, GL_DYNAMIC_DRAW);
 		hull->hullDraw = bov_order_new((GLuint*) hull->hull_idxs, hull->nHull_GL, GL_DYNAMIC_DRAW);
+
 	} else {
 		hull->coordDraw = bov_points_new((GLfloat (*)[2]) hull->coord, hull->nPoints_GL, GL_STATIC_DRAW);
 		hull->hullDraw = bov_order_new((GLuint*) hull->hull_idxs, hull->nHull_GL, GL_STATIC_DRAW);
