@@ -146,12 +146,11 @@ int main()
 	//*/
 
 	printf("Convex Hull Algorithm --- BEGIN\n");
-	clock_t start = clock();
-	struct convex_hull_t *hull = jarvis_march(nPoints, coord, 1);
+
+	// struct convex_hull_t *hull = jarvis_march(nPoints, coord, 1);
 	// struct convex_hull_t *hull = graham_scan(nPoints, coord, 1);
 	// struct convex_hull_t *hull = chan_(nPoints, coord, 1);
-	clock_t end = clock();
-	printf("Time = %f \n", (double) (end-start) / CLOCKS_PER_SEC);
+	struct convex_hull_t *hull = quickhull(nPoints, coord, 1);
 
 	printf("Convex Hull Algorithm --- END\n");
 	printf("   →  Method : %s\n", hull->method);
