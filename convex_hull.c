@@ -567,7 +567,7 @@ void animate(float coord[][2], bov_window_t* window, int* actual_hull, int nHull
 
 struct convex_hull_t* chan_(int nPoints, float coord[][2], int display)
 {
-	int mPoints = 40;
+	int mPoints = 100;
 	/* ------------------------------------------
 		GRAHAM'S PARTITION OF THE SET OF POINTS
 	--------------------------------------------- */

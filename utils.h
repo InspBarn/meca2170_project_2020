@@ -76,50 +76,42 @@ struct convex_hull_t{
 	bov_order_t *hullDraw;
 };
 
-/*
-------------------------
+/* ---------------------
 	Initialize a convex_hull_t structure from the coordinates coord[][2].
 	After its initialisation, the structure *hull has an empty hull_idxs
 	vector but all its points' coordinates have been initialized.
 	If display is 1, then we initialize the arguments which will allow us
 	to draw the points as well as the convex hull. Else display is 0.
-------------------------
-*/
+--------------------- */
 void convex_hull_init(struct convex_hull_t *hull,
 					  int start,
 					  int stop,
 					  float coord[][2],
 					  int display);
 
-/*
-------------------------
+/* ---------------------
 	Initialize the drawing arguments of the convex_hull_t structure. This
 	function is whether called in convex_hull_init if display is 1 or
 	afterwards if we decide to show the convex hull later on.
-------------------------
-*/
+--------------------- */
 void convex_hull_display_init(struct convex_hull_t *hull,
 							  int color);
 
-/*
-------------------------
+/* ---------------------
 	Update the hull_idxs vector of the convex_hull_t structure. The integer
 	'n' is the amount of element in the new convex hull and 'idxs' is its
 	new arguments in the vector of points coordinates of 'hull'.
 	It updates the convex hull bov_order_t if necessary (it means if display
 	is 1).
-------------------------
-*/
+--------------------- */
 void convex_hull_update(struct convex_hull_t *hull,
 						const int *idxs,
 						int n);
 
-/*
-------------------------
+/* ---------------------
 	Partially update the hull_idxs vector of the convex_hull_t structure.
 	-→ DOES NOT WORK ACTUALLY !!
-------------------------
-*/
+--------------------- */
 void convex_hull_partial_update(struct convex_hull_t *hull,
 								const int *idxs,
 								int start,
