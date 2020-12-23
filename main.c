@@ -13,7 +13,7 @@ int main()
 	// we print the seed so you can get the distribution of points back
 	printf("seed=%d\n", seed);
 
-	const int nPoints = 50;
+	const int nPoints = 1000000;
 	float (*coord)[2] = malloc(sizeof(coord[0])*nPoints);
 #if 0 // put 1 for random polygon
 	random_polygon(coord, nPoints, 4);
@@ -114,9 +114,9 @@ int main()
 	printf("Convex Hull Algorithm --- BEGIN\n");
 
 	//struct convex_hull_t *hull = jarvis_march(nPoints, coord, 1);
-	//struct convex_hull_t *hull = graham_scan(nPoints, coord, 1);
+	struct convex_hull_t *hull = graham_scan(nPoints, coord, 1);
 	//struct convex_hull_t *hull = chan_(nPoints, coord, 1);
-	struct convex_hull_t *hull = quickhull(nPoints, coord, 1);
+	//struct convex_hull_t *hull = quickhull(nPoints, coord, 1);
 
 	printf("Convex Hull Algorithm --- END\n");
 	printf("   →  Method : %s\n", hull->method);

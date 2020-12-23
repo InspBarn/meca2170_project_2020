@@ -1,7 +1,7 @@
 #include "utils.h"
 #include <unistd.h>
 
-#define JARVIS_ANIMATION 1
+#define JARVIS_ANIMATION 0
 
 #define GRAHAM_ANIMATION 0
 
