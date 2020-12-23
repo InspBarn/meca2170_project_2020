@@ -1304,7 +1304,7 @@ bov_points_t* bov_points_new(const GLfloat coords[][2],
 
 	// Vertex Buffer Object
 	glGenBuffers(1, &points->vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, points->vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, points->vbo); // Problem ??
 
 	// specify the layout of the data
 	glVertexAttribPointer(POS_LOCATION, 2, GL_FLOAT, GL_FALSE, 0, 0);
